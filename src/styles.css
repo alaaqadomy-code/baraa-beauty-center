@@ -299,3 +299,32 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
   .hero:has(.hero__media--feature)::before{background:linear-gradient(180deg,rgba(18,10,15,.35) 0,transparent 25%)}
   .hero:has(.hero__media--feature) .scroll-cue{display:none}
 }
+/* map FAB + sheet */
+.fab--map{bottom:92px;width:54px;height:54px;inset-inline-start:23px;border:0;cursor:pointer;color:var(--ink);background:linear-gradient(135deg,var(--gold-2),var(--gold) 55%,var(--gold-3));box-shadow:0 14px 34px -8px rgba(216,176,122,.6)}
+.fab--map::before{display:none}
+.fab--map svg{width:26px;height:26px;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.fab__tip{position:absolute;inset-inline-start:calc(100% + 10px);white-space:nowrap;background:rgba(18,10,15,.85);color:var(--gold-2);font-size:.82rem;padding:.35em .8em;border-radius:99px;border:1px solid rgba(243,220,176,.25);opacity:0;transform:translateX(6px);transition:opacity .3s,transform .3s var(--ease);pointer-events:none}
+.fab--map:hover .fab__tip,.fab--map:focus-visible .fab__tip{opacity:1;transform:none}
+.mapsheet{border:0;padding:0;background:transparent;max-width:min(560px,calc(100% - 32px));width:100%;color:var(--text);overflow:visible}
+.mapsheet::backdrop{background:rgba(10,5,8,.6);backdrop-filter:blur(6px)}
+.mapsheet[open]{animation:sheetIn .5s var(--ease)}
+.mapsheet.closing{animation:sheetOut .28s ease forwards}
+.mapsheet[open]::backdrop{animation:fadeB .4s ease}
+@keyframes sheetIn{from{opacity:0;transform:translateY(40px) scale(.96)}}
+@keyframes sheetOut{to{opacity:0;transform:translateY(30px) scale(.97)}}
+@keyframes fadeB{from{opacity:0}}
+.mapsheet__card{position:relative;border-radius:var(--radius-lg);overflow:hidden;background:linear-gradient(160deg,var(--plum),var(--ink-2));border:1px solid rgba(243,220,176,.25);box-shadow:0 40px 100px -30px rgba(0,0,0,.8)}
+.mapsheet__map{aspect-ratio:16/10;background:var(--ink-2)}
+.mapsheet__map iframe{width:100%;height:100%;border:0;display:block;filter:saturate(.85) contrast(1.05)}
+.mapsheet__body{padding:22px 24px 26px}
+.mapsheet__body h2{font-size:1.6rem;margin:4px 0}
+.mapsheet__body .hero__cta{opacity:1;animation:none;margin-top:18px}
+.mapsheet__x{position:absolute;top:12px;inset-inline-end:12px;z-index:2;width:42px;height:42px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:rgba(18,10,15,.75);color:var(--text);backdrop-filter:blur(8px)}
+.mapsheet__x svg{width:20px;height:20px}
+@media (max-width:600px){
+  .mapsheet{margin:auto 0 0;max-width:100%;max-height:92svh}
+  .mapsheet__card{border-radius:28px 28px 0 0}
+  .mapsheet__body .btn{flex:1;justify-content:center}
+}
+.mapsheet__body .btn{white-space:nowrap}

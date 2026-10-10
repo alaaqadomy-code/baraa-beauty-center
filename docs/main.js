@@ -69,3 +69,17 @@
     });
   }
 })();
+
+// map sheet
+(() => {
+  const d = document.getElementById('mapsheet'), btn = document.querySelector('.fab--map');
+  if (!d || !btn) return;
+  const ifr = d.querySelector('iframe');
+  const open = () => { if (!ifr.src) ifr.src = ifr.dataset.src; d.showModal(); document.documentElement.style.overflow = 'hidden'; };
+  const close = () => { d.classList.add('closing'); setTimeout(() => { d.classList.remove('closing'); d.close(); }, 280); };
+  btn.addEventListener('click', open);
+  d.querySelector('.mapsheet__x').addEventListener('click', close);
+  d.addEventListener('click', e => { if (e.target === d) close(); });
+  d.addEventListener('cancel', e => { e.preventDefault(); close(); });
+  d.addEventListener('close', () => { document.documentElement.style.overflow = ''; btn.focus(); });
+})();

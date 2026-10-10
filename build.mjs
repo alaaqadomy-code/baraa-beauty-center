@@ -55,6 +55,9 @@ const I = {
   ig: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>',
   fb: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 8V6.5c0-.7.2-1.2 1.3-1.2H17V2.2C16.7 2.1 15.6 2 14.4 2 11.9 2 10.2 3.5 10.2 6.3V8H7.5v3.4h2.7V22H14V11.4h2.7l.4-3.4H14z"/></svg>',
   snap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2.5c3 0 5.2 2.3 5.2 5.3v2.4c.5.2 1.2 0 1.7-.2.6-.2 1.1.6.5 1-.6.5-1.8.8-2 1.4.6 1.7 2 3.4 3.8 3.9.4.1.4.6 0 .8-.7.3-1.6.4-2 .7-.2.3-.1 1-.5 1.2-.6.2-1.6-.3-2.8.1-1 .4-1.9 1.6-3.9 1.6s-2.9-1.2-3.9-1.6c-1.2-.4-2.2.1-2.8-.1-.4-.2-.3-.9-.5-1.2-.4-.3-1.3-.4-2-.7-.4-.2-.4-.7 0-.8 1.8-.5 3.2-2.2 3.8-3.9-.2-.6-1.4-.9-2-1.4-.6-.4-.1-1.2.5-1 .5.2 1.2.4 1.7.2V7.8c0-3 2.2-5.3 5.2-5.3z"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>',
+  nav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   arrow: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
   sparkle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>',
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
@@ -162,7 +165,23 @@ const footer = () => `<footer class="ftr"><div class="wrap">
   </div>
   <div class="ftr__bottom"><span>© <span id="y">${new Date().getFullYear()}</span> ${B.name} · ${B.nameEn}</span><span>صُنع بحب في الأردن</span></div>
 </div></footer>
-<a class="fab" href="${B.wa}" target="_blank" rel="noopener" aria-label="احجزي عبر واتساب">${I.wa}</a>`;
+<button class="fab fab--map" type="button" aria-haspopup="dialog" aria-controls="mapsheet" aria-label="موقع السنتر على الخريطة">${I.pin}<span class="fab__tip">موقعنا</span></button>
+<a class="fab" href="${B.wa}" target="_blank" rel="noopener" aria-label="احجزي عبر واتساب">${I.wa}</a>
+<dialog class="mapsheet" id="mapsheet" aria-labelledby="map-h">
+  <div class="mapsheet__card">
+    <button class="mapsheet__x" type="button" aria-label="إغلاق">${I.close}</button>
+    <div class="mapsheet__map"><iframe title="خريطة موقع ${B.name}" data-src="https://maps.google.com/maps?q=${B.geo.lat},${B.geo.lng}&hl=ar&z=16&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+    <div class="mapsheet__body">
+      <span class="eyebrow">زورينا</span>
+      <h2 id="map-h">${B.name}</h2>
+      <p class="muted">${B.city}، ${B.area} · يفتح الساعة 10:00 صباحاً</p>
+      <div class="hero__cta">
+        <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=${B.geo.lat},${B.geo.lng}" target="_blank" rel="noopener">${I.nav}الاتجاهات</a>
+        <a class="btn btn--ghost" href="${B.maps}" target="_blank" rel="noopener">${I.pin}خرائط جوجل</a>
+      </div>
+    </div>
+  </div>
+</dialog>`;
 
 const ctas = (light = false) => `<div class="hero__cta">
   <a class="btn" href="${B.wa}" target="_blank" rel="noopener">${I.wa}احجزي عبر واتساب</a>
