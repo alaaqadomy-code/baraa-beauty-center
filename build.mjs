@@ -1,5 +1,5 @@
 // Static site generator (no deps): node build.mjs  ->  ./docs
-import { mkdirSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, readdirSync } from 'node:fs';
 import { minify } from './minify.mjs';
 
 const SITE = (process.env.SITE_URL || 'https://idresalalaree-debug.github.io/baraa-beauty-center').replace(/\/$/, '');
@@ -23,7 +23,15 @@ const B = {
 
 // ---------- images (Unsplash CDN, auto AVIF/WebP) ----------
 const U = (id, w, h) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}${h ? `&h=${h}` : ''}&q=70`;
-const img = (id, alt, { ratio = 1.25, sizes = '(max-width:900px) 100vw, 50vw', eager = false, cls = '', widths = [480, 800, 1200] } = {}) => {
+const PH = JSON.parse(readFileSync('src/photos/meta.json', 'utf8'));
+// real photos from the salon's Instagram, self-hosted WebP (4:5)
+const ph = (name, alt, sizes = '(max-width:900px) 100vw, 50vw', eager = false) => {
+  const [w, h] = PH[name];
+  const set = [...new Set([400, w])].map(x => `${BASE}/photos/${name}-${x}.webp ${x}w`).join(', ');
+  return `<img src="/photos/${name}-${w}.webp" srcset="${set}" sizes="${sizes}" width="${w}" height="${h}" alt="${alt}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+};
+const img = (id, alt, opts = {}) => id.startsWith('ph:') ? ph(id.slice(3), alt, opts.sizes, opts.eager) : imgU(id, alt, opts);
+const imgU = (id, alt, { ratio = 1.25, sizes = '(max-width:900px) 100vw, 50vw', eager = false, cls = '', widths = [480, 800, 1200] } = {}) => {
   const set = widths.map(w => `${U(id, w, Math.round(w * ratio))} ${w}w`).join(', ');
   const w = widths[1], h = Math.round(w * ratio);
   return `<img src="${U(id, w, h)}" srcset="${set}" sizes="${sizes}" width="${w}" height="${h}" alt="${alt}"${cls ? ` class="${cls}"` : ''} ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
@@ -56,14 +64,26 @@ const I = {
 
 // ---------- services ----------
 const services = [
-  { t: 'مكياج العرائس', d: 'إطلالة ليلة العمر مع مدام براءة شخصياً: مكياج ثابت، تسريحة وطرحة متكتكة. أكثر من 1000 عروس وثقوا فينا.', img: P.bride2, href: '/bridal-makeup/', alt: 'عروس بفستان أبيض بعد مكياج العرائس' },
-  { t: 'مكياج السهرات والمناسبات', d: 'مكياج احترافي يبرز جمالك الطبيعي، لكل مناسبة إطلالتها.', img: P.mua, href: '/makeup-artist/', alt: 'خبيرة مكياج تضع المكياج لعميلة' },
+  { t: 'مكياج العرائس', d: 'إطلالة ليلة العمر مع مدام براءة شخصياً: مكياج ثابت، تسريحة وطرحة متكتكة. أكثر من 1000 عروس وثقوا فينا.', img: 'ph:bride-salon', href: '/bridal-makeup/', alt: 'مدام براءة تجهّز عروس في براءة بيوتي سنتر' },
+  { t: 'مكياج السهرات والمناسبات', d: 'مكياج احترافي يبرز جمالك الطبيعي، لكل مناسبة إطلالتها.', img: 'ph:hijab-glam', href: '/makeup-artist/', alt: 'مكياج سهرة مع حجاب من أعمال براءة بيوتي سنتر' },
   { t: 'السشوار وتصفيف الشعر', d: 'سشوار وفير وتسريحات ساحرة لجميع المناسبات.', img: P.curl, href: '/makeup-artist/', alt: 'تصفيف الشعر بالمكواة في الصالون' },
-  { t: 'عروس الحنّة', d: 'لوك حنّة مميز بألوان دافية وتفاصيل بتليق بليلتك.', img: P.lips, href: '/bridal-makeup/', alt: 'مكياج عروس الحنة' },
-  { t: 'تجهيز المرافقات', d: 'مكياج وتسريحات لأهل العروس وصاحباتها بنفس اليوم.', img: P.bride3, href: '/bridal-makeup/', alt: 'عروس تحمل باقة ورد مع المرافقات' },
-  { t: 'دورات المكياج والماستر كلاس', d: 'دورات خاصة وماستر كلاس مع خبيرة المكياج براءة علي.', img: P.palette, href: '/makeup-courses/', alt: 'أدوات وألوان مكياج في دورة تدريبية' },
-  { t: 'الخدمة المنزلية الفاخرة', d: 'تجربة الصالون كاملة لعتبة دارك، بنفس الجودة وأعلى معايير التعقيم.', img: P.mua2, href: '/home-service/', alt: 'مكياج في المنزل قبل المناسبة' },
-  { t: 'VIP لعرايس عمّان', d: 'تجهيز عرايس الفستان الأبيض بالبيت أو غرفة الفندق داخل عمّان مع مدام براءة.', img: P.bride, href: '/home-service/', alt: 'عروس بفستان أبيض في عمّان' },
+  { t: 'عروس الحنّة', d: 'لوك حنّة مميز بألوان دافية وتفاصيل بتليق بليلتك.', img: 'ph:henna-bride', href: '/bridal-makeup/', alt: 'عروس الحنة بالثوب الفلاحي من أعمال براءة بيوتي سنتر' },
+  { t: 'تجهيز المرافقات', d: 'مكياج وتسريحات لأهل العروس وصاحباتها بنفس اليوم.', img: 'ph:bride-pearls', href: '/bridal-makeup/', alt: 'عروس بطرحة اللؤلؤ من أعمال براءة بيوتي سنتر' },
+  { t: 'دورات المكياج والماستر كلاس', d: 'دورات خاصة وماستر كلاس مع خبيرة المكياج براءة علي.', img: 'ph:turquoise-liner', href: '/makeup-courses/', alt: 'تقنية التركواز تحت العين من دروس براءة علي' },
+  { t: 'الخدمة المنزلية الفاخرة', d: 'تجربة الصالون كاملة لعتبة دارك، بنفس الجودة وأعلى معايير التعقيم.', img: 'ph:soft-glam', href: '/home-service/', alt: 'مكياج سوفت جلام من أعمال براءة بيوتي سنتر' },
+  { t: 'VIP لعرايس عمّان', d: 'تجهيز عرايس الفستان الأبيض بالبيت أو غرفة الفندق داخل عمّان مع مدام براءة.', img: 'ph:bride-veil', href: '/home-service/', alt: 'عروس بالطرحة من أعمال براءة بيوتي سنتر' },
+];
+
+const WORK = [
+  ['bride-pearls', 'عروس بطرحة اللؤلؤ ومكياج ناعم', 'عروس · طرحة لؤلؤ'],
+  ['cateye-glam', 'مكياج آيلاينر مجنّح مع حجاب', 'آيلاينر مجنّح'],
+  ['henna-bride', 'عروس الحنة بالثوب المطرّز', 'عروس الحنّة'],
+  ['bride-salon', 'مدام براءة تلبّس العروس التاج في السنتر', 'تجهيز العروس بالسنتر'],
+  ['soft-glam', 'مكياج سوفت جلام مع كونتور ناعم', 'سوفت جلام'],
+  ['bride-veil', 'عروس بالطرحة والفيونكة', 'عروس · لوك ناعم'],
+  ['turquoise-liner', 'تركواز تحت العين بلمسة براءة', 'تركواز تحت العين'],
+  ['hijab-glam', 'مكياج سهرة مع حجاب أبيض', 'سهرة · حجاب'],
+  ['natural-glam', 'مكياج طبيعي من فريق السنتر', 'لوك طبيعي'],
 ];
 
 // ---------- FAQ banks ----------
@@ -163,7 +183,7 @@ const salonId = `${SITE}/#salon`;
 const salonLD = {
   '@type': 'BeautySalon', '@id': salonId,
   name: B.name, alternateName: B.nameEn, url: SITE + '/',
-  image: U(P.salon, 1200, 630), logo: `${SITE}/favicon.svg`,
+  image: [U(P.salon, 1200, 630), ...WORK.slice(0, 4).map(([n]) => `${SITE}/photos/${n}-${PH[n][0]}.webp`)], logo: `${SITE}/favicon.svg`,
   telephone: B.phone, priceRange: '$$',
   address: { '@type': 'PostalAddress', streetAddress: B.area, addressLocality: B.city, addressRegion: 'محافظة الزرقاء', addressCountry: 'JO' },
   areaServed: [{ '@type': 'City', name: B.city }, { '@type': 'City', name: 'عمّان' }],
@@ -267,7 +287,7 @@ const home = page({
       <div class="story__media">
         ${img(P.palette, 'اختيار ألوان المكياج المناسبة للعروس', { ratio: 1.25 })}
         ${img(P.mua, 'جلسة تجربة مكياج العروس', { ratio: 1.25 })}
-        ${img(P.bride2, 'العروس بإطلالتها النهائية يوم العرس', { ratio: 1.25 })}
+        ${img('ph:bride-pearls', 'عروس بطرحة اللؤلؤ من أعمال براءة بيوتي سنتر')}
       </div>
       <div>
         <div class="step" data-step="0"><span class="step__n">01</span><h3>استشارة واختيار الستايل</h3><p class="muted">ابعتيلنا صورة الفستان والستايل اللي بتحبيه، ونقترح عليكِ الألوان والتسريحة اللي بتناسب ملامحك ولون بشرتك.</p></div>
@@ -292,11 +312,11 @@ const home = page({
   </div>
 </section>
 
-<section class="sec sec--plum" aria-labelledby="gal-h">
+<section class="sec sec--plum" id="work" aria-labelledby="gal-h">
   <div class="wrap">
-    <div class="sec__head center" data-reveal><span class="eyebrow">إلهام</span><h2 id="gal-h">تفاصيل بتصنع الفرق</h2><p class="muted">تابعي أحدث أعمالنا على <a href="${B.ig}" target="_blank" rel="noopener" style="color:var(--gold-2)">إنستغرام</a>.</p></div>
-    <div class="gallery">${[[P.lips, 'مكياج شفاه وردي ناعم'], [P.hair2, 'تسريحة شعر في الصالون'], [P.bride2, 'عروس بإطلالة ناعمة'], [P.brushes, 'فراشي مكياج احترافية'], [P.bride3, 'عروس بباقة ورد'], [P.blow, 'سشوار في الصالون'], [P.salon, 'داخل صالون التجميل'], [P.mua, 'مكياج سهرة'], [P.cosmetics, 'مستحضرات تجميل']]
-      .map(([id, alt], i) => `<figure>${img(id, alt, { ratio: [1.3, 1, 1.5][i % 3], sizes: '(max-width:600px) 100vw, 33vw', widths: [400, 700, 1000] })}</figure>`).join('')}</div>
+    <div class="sec__head center" data-reveal><span class="eyebrow">من أعمالنا</span><h2 id="gal-h">إطلالات حقيقية من براءة بيوتي سنتر</h2><p class="muted">كل صورة هون من شغل مدام براءة وفريق السنتر. المزيد على <a href="${B.ig}" target="_blank" rel="noopener" style="color:var(--gold-2)">إنستغرام</a>.</p></div>
+    <div class="gallery">${WORK.map(([n, alt, cap]) => `<figure>${ph(n, alt, '(max-width:600px) 100vw, 33vw')}<figcaption>${cap}</figcaption></figure>`).join('')}</div>
+    <p style="text-align:center;margin-top:40px"><a class="btn btn--ghost" href="${B.ig}" target="_blank" rel="noopener">${I.ig}شوفي كل أعمالنا</a></p>
   </div>
 </section>
 
@@ -356,8 +376,8 @@ const bridal = landing({
   <div class="sec__head" data-reveal><span class="eyebrow">باقة العروس</span><h2>كل تفصيلة محسوبة ليومك</h2><p class="muted">نشتغل معك خطوة بخطوة من الاستشارة لحد آخر صورة.</p></div>
   ${feats([['crown', 'مع مدام براءة', 'مكياج عرايس الأبيض بإيد خبيرة المكياج براءة علي شخصياً.'], ['heart', 'تسريحة وطرحة', 'تسريحة ثابتة وطرحة متكتكة طول الليل.'], ['sparkle', 'عروس الحنّة', 'لوك خاص لليلة الحنّة.'], ['home', 'بيت أو فندق', 'لعرايس عمّان: نوصلك لباب بيتك أو غرفتك بالفندق.']])}
 </div></section>
-${splitSec({ eyebrow: 'VIP لعرايس عمّان', h: 'يومك الكبير بروقان وراحة', p: 'خدمة تجهيز عرايس الفستان الأبيض بتوصلك لغاية باب بيتك أو غرفتك بالفندق داخل عمّان، مع مدام براءة.', ticks: ['ميك أب احترافي وثابت', 'تسريحة وطرحة متكتكة', 'أعداد محدودة شهرياً، احجزي بدري'], imgId: P.bride, alt: 'عروس بفستان أبيض في عمّان', plum: true, badge: '<b>بيت أو فندق</b>داخل عمّان' })}
-${splitSec({ eyebrow: 'العروس والمرافقات', h: 'جهّزي أهلك وصاحباتك معك', p: `خدمة العرايس والمرافقات بالسنتر في ${B.city}، ${B.area}.`, ticks: ['مكياج وتسريحات للمرافقات', 'أجواء حلوة ومريحة مع فريق السنتر', `رقم السنتر: ${B.phoneLocal}`], imgId: P.bride3, alt: 'عروس مع باقة الورد', rev: true })}`,
+${splitSec({ eyebrow: 'VIP لعرايس عمّان', h: 'يومك الكبير بروقان وراحة', p: 'خدمة تجهيز عرايس الفستان الأبيض بتوصلك لغاية باب بيتك أو غرفتك بالفندق داخل عمّان، مع مدام براءة.', ticks: ['ميك أب احترافي وثابت', 'تسريحة وطرحة متكتكة', 'أعداد محدودة شهرياً، احجزي بدري'], imgId: 'ph:bride-veil', alt: 'عروس بالطرحة من أعمال مدام براءة', plum: true, badge: '<b>بيت أو فندق</b>داخل عمّان' })}
+${splitSec({ eyebrow: 'العروس والمرافقات', h: 'جهّزي أهلك وصاحباتك معك', p: `خدمة العرايس والمرافقات بالسنتر في ${B.city}، ${B.area}.`, ticks: ['مكياج وتسريحات للمرافقات', 'أجواء حلوة ومريحة مع فريق السنتر', `رقم السنتر: ${B.phoneLocal}`], imgId: 'ph:bride-salon', alt: 'مدام براءة تجهّز العروس في السنتر', rev: true })}`,
 });
 
 const mua = landing({
@@ -403,7 +423,7 @@ const courses = landing({
   <div class="sec__head" data-reveal><span class="eyebrow">نوعين من التعلّم</span><h2>اختاري الطريقة اللي بتناسبك</h2></div>
   ${feats([['crown', 'دورة خاصة', 'تدريب فردي مع براءة علي حسب مستواكِ وهدفك.'], ['sparkle', 'ماستر كلاس', 'جلسة مكثفة على تقنيات وستايلات محددة.']])}
 </div></section>
-${splitSec({ eyebrow: 'ليش مع براءة؟', h: 'خبرة حقيقية من آلاف الإطلالات', p: 'تعلّمي من خبيرة اشتغلت مع أكثر من 1000 عروس.', ticks: ['تطبيق عملي', 'أسرار الثبات والتسريحة والطرحة', `السنتر في ${B.city}، ${B.area}`], imgId: P.brushes, alt: 'فراشي مكياج احترافية', plum: true })}`,
+${splitSec({ eyebrow: 'ليش مع براءة؟', h: 'خبرة حقيقية من آلاف الإطلالات', p: 'تعلّمي من خبيرة اشتغلت مع أكثر من 1000 عروس.', ticks: ['تطبيق عملي', 'أسرار الثبات والتسريحة والطرحة', `السنتر في ${B.city}، ${B.area}`], imgId: 'ph:turquoise-liner', alt: 'تقنية التركواز تحت العين من أعمال براءة علي', plum: true })}`,
 });
 
 const notFound = page({
@@ -422,6 +442,8 @@ writeFileSync(`${OUT}/404.html`, minify.html(rebase(notFound)));
 writeFileSync(`${OUT}/styles.css`, minify.css(await (await import('node:fs/promises')).readFile('src/styles.css', 'utf8')));
 copyFileSync('src/main.js', `${OUT}/main.js`);
 copyFileSync('src/favicon.svg', `${OUT}/favicon.svg`);
+mkdirSync(`${OUT}/photos`, { recursive: true });
+for (const f of readdirSync('src/photos').filter(f => f.endsWith('.webp'))) copyFileSync(`src/photos/${f}`, `${OUT}/photos/${f}`);
 writeFileSync(`${OUT}/.nojekyll`, '');
 writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 writeFileSync(`${OUT}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${Object.keys(pages).map(p => `  <url><loc>${SITE}${p}</loc><lastmod>${TODAY}</lastmod></url>`).join('\n')}\n</urlset>\n`);
