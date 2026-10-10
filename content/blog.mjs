@@ -1,8 +1,10 @@
 // Blog articles. body = HTML (h2/h3/p/ul). Links are root-relative (rebased at build).
+import { postsZarqa4 } from './blog-zarqa-4.mjs';
 // Facts used here come only from the salon's own Instagram (address, phones, services, 1000+ brides, courses).
 import { postsZarqa3 } from './blog-zarqa-3.mjs';
 
 export const posts = [
+  ...postsZarqa4,
   ...postsZarqa3,
   {
     slug: 'engagement-makeup-zarqa',

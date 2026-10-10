@@ -282,7 +282,7 @@ const heroMedia = slides => `<div class="hero__media">${slides.map(([id, alt], i
 // ---------- HOME ----------
 const home = page({
   path: '/', ogImg: P.heroMakeup, ogAbs: `${SITE}/photos/hero-d.webp`,
-  preload: `<link rel="preload" as="image" media="(max-width:900px)" href="${BASE}/photos/hero-m.webp" fetchpriority="high">
+  preload: `<link rel="preload" as="image" media="(max-width:900px)" href="/photos/hero-m.webp" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width:901px)" imagesrcset="${BASE}/photos/hero-d-640.webp 640w, ${BASE}/photos/hero-d.webp 1320w" imagesizes="62vw" fetchpriority="high">
 `,
   title: `${B.name} | صالون تجميل وميك أب آرتست في ${B.city}`,
