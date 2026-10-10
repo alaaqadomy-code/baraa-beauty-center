@@ -2,6 +2,13 @@
 import { mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, readdirSync } from 'node:fs';
 import { minify } from './minify.mjs';
 import { posts } from './content/blog.mjs';
+import { cats } from './content/categories.mjs';
+// attach each post to its cluster; fail loudly on orphans/duplicates
+const catBySlug = {};
+for (const c of cats) for (const s of c.posts) { if (catBySlug[s]) throw new Error('dup cluster: ' + s); catBySlug[s] = c; }
+for (const p of posts) { p.cat = catBySlug[p.slug]; if (!p.cat) throw new Error('post without cluster: ' + p.slug); p.tag = p.cat.name; }
+for (const c of cats) c.items = c.posts.map(s => posts.find(p => p.slug === s) || (() => { throw new Error('missing post: ' + s); })());
+const catOfPillar = path => cats.filter(c => c.pillar?.[0] === path);
 import { createHash } from 'node:crypto';
 const ver = f => createHash('md5').update(readFileSync(f)).digest('hex').slice(0, 8); // cache-busting
 const V_CSS = ver('src/styles.css'), V_JS = ver('src/main.js');
@@ -370,11 +377,14 @@ const home = page({
 </section>
 
 ${faqBlock(faqHome)}
-<section class="sec"><div class="wrap"><div class="sec__head" data-reveal><span class="eyebrow">من المدونة</span><h2>نصائح من خبيرة عرائس</h2></div><div class="pgrid">${posts.slice(0, 3).map(postCard).join('')}</div><p style="text-align:center;margin-top:36px"><a class="btn btn--ghost" href="/blog/">كل المقالات ${I.arrow}</a></p></div></section>
+<section class="sec"><div class="wrap"><div class="sec__head" data-reveal><span class="eyebrow">من المدونة</span><h2>نصائح من خبيرة عرائس</h2></div><div class="pgrid">${posts.slice(0, 3).map(postCard).join('')}</div><p style="text-align:center;margin-top:36px"><a class="btn btn--ghost" href="/blog/">كل المقالات ${I.arrow}</a> <a class="btn btn--ghost" href="/blog/zarqa-salons/">دليل صالونات الزرقاء ${I.arrow}</a></p></div></section>
 ${ctaBlock()}`,
 });
 
 // ---------- landing page factory ----------
+const clusterSec = path => catOfPillar(path).map(c => `<section class="sec"><div class="wrap"><div class="sec__head" data-reveal><span class="eyebrow">من المدونة</span><h2>${c.h1}</h2></div>
+<div class="pgrid">${c.items.slice(0, 6).map(postCard).join('')}</div><p style="text-align:center;margin-top:36px"><a class="btn btn--ghost" href="/blog/${c.slug}/">كل مقالات ${c.name} ${I.arrow}</a></p></div></section>`).join('');
+
 const landing = ({ path, crumb, title, desc, h1, h1Shine, eyebrow, lead, hero, ogImg, sections, faq, service }) => page({
   path, title, desc, lcp: hero, ogImg: ogImg || hero,
   schema: [serviceLD(crumb, desc, path), faqLD(faq), crumbLD([['الرئيسية', '/'], [crumb, path]])],
@@ -390,6 +400,7 @@ const landing = ({ path, crumb, title, desc, h1, h1Shine, eyebrow, lead, hero, o
   </div>
 </section>
 ${sections}
+${clusterSec(path)}
 ${faqBlock(faq, `أسئلة شائعة عن ${crumb}`)}
 ${ctaBlock()}`,
 });
@@ -466,9 +477,7 @@ const engageDef = () => landing({
   <div class="sec__head" data-reveal><span class="eyebrow">اختاري لوكك</span><h2>ثلاث ستايلات للخطوبة</h2></div>
   ${feats([['heart', 'ناعم', 'للخطوبة العائلية والنهارية: بشرة مشرقة ولمسة طبيعية.'], ['sparkle', 'سوفت جلام', 'الأكثر طلباً: بيطلع حلو بالصور وبالحقيقة.'], ['crown', 'جلام كامل', 'لحفلات القاعات بالليل: عيون قوية وإطلالة فخمة.']])}
 </div></section>
-${splitSec({ eyebrow: 'مع الحجاب أو التسريحة', h: 'إطلالة متكاملة', p: 'بنخطط المكياج مع التسريحة أو لفة الحجاب كقطعة وحدة.', ticks: ['تنسيق مع لون الفستان والحجاب', 'تثبيت يدوم طول الحفلة', 'بالسنتر أو بالبيت'], imgId: 'ph:soft-glam', alt: 'مكياج سوفت جلام للخطوبة من أعمال براءة بيوتي سنتر', plum: true })}
-<section class="sec"><div class="wrap"><div class="sec__head" data-reveal><span class="eyebrow">من المدونة</span><h2>اقرئي قبل الخطوبة</h2></div>
-<div class="pgrid">${posts.filter(x => ['engagement-makeup-zarqa', 'hijab-evening-makeup-zarqa', 'makeup-artist-zarqa'].includes(x.slug)).map(postCard).join('')}</div></div></section>`,
+${splitSec({ eyebrow: 'مع الحجاب أو التسريحة', h: 'إطلالة متكاملة', p: 'بنخطط المكياج مع التسريحة أو لفة الحجاب كقطعة وحدة.', ticks: ['تنسيق مع لون الفستان والحجاب', 'تثبيت يدوم طول الحفلة', 'بالسنتر أو بالبيت'], imgId: 'ph:soft-glam', alt: 'مكياج سوفت جلام للخطوبة من أعمال براءة بيوتي سنتر', plum: true })}`,
 });
 
 const courses = landing({
@@ -500,12 +509,16 @@ const blogIndex = page({
   <span class="eyebrow">مدونة براءة</span><h1>${words('أسرار الجمال من خبيرة عرائس', 2)}</h1>
   <p class="hero__lead">أدلة ونصائح عملية عن المكياج والعرائس والتسريحات، من خبرة أكثر من 1000 عروس.</p>
 </div></section>
-<section class="sec sec--light" style="padding-top:70px"><div class="wrap"><div class="pgrid">${posts.map(postCard).join('')}</div></div></section>
+<section class="sec sec--light" style="padding-top:60px"><div class="wrap">
+<nav class="catnav" aria-label="تصنيفات المدونة">${cats.map(c => `<a href="/blog/${c.slug}/">${c.name} <small>${c.items.length}</small></a>`).join('')}</nav>
+${cats.map(c => `<section class="catsec" aria-labelledby="c-${c.slug}"><div class="catsec__head"><h2 id="c-${c.slug}">${c.name}</h2><a href="/blog/${c.slug}/">كل المقالات ${I.arrow}</a></div>
+<div class="pgrid">${c.items.slice(0, 3).map(postCard).join('')}</div></section>`).join('')}
+</div></section>
 ${ctaBlock()}`,
 });
 
 const postPage = p => {
-  const related = [...posts.filter(x => x.slug !== p.slug && x.tag === p.tag), ...posts.filter(x => x.slug !== p.slug && x.tag !== p.tag)].slice(0, 3);
+  const related = [...p.cat.items.filter(x => x !== p), ...posts.filter(x => x.cat !== p.cat)].slice(0, 3);
   const path = `/blog/${p.slug}/`;
   return page({
     path, ogImg: P.cosmetics, title: `${p.title} | ${B.name}`, desc: p.desc,
@@ -514,12 +527,12 @@ const postPage = p => {
       datePublished: p.date, dateModified: p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
       image: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`, mainEntityOfPage: `${SITE}${path}`,
       author: { '@type': 'Person', name: B.owner, jobTitle: 'خبيرة مكياج', url: B.ig }, publisher: { '@id': salonId } },
-      faqLD(p.faq), crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [p.title, path]])],
+      faqLD(p.faq), crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [p.cat.name, `/blog/${p.cat.slug}/`], [p.title, path]])],
     body: `
 <article>
 <header class="hero hero--blog"><div class="wrap">
-  <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li><a href="/blog/">المدونة</a></li><li aria-current="page">${p.tag}</li></ol></nav>
-  <span class="eyebrow">${p.tag}</span>
+  <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li><a href="/blog/">المدونة</a></li><li><a href="/blog/${p.cat.slug}/">${p.cat.name}</a></li><li aria-current="page">${p.title}</li></ol></nav>
+  <a class="eyebrow" href="/blog/${p.cat.slug}/">${p.cat.name}</a>
   <h1 class="post-h1">${p.title}</h1>
   <p class="post-meta">بقلم <b>${B.owner}</b>، خبيرة مكياج · <time datetime="${p.date}">${fmtDate(p.date)}</time></p>
 </div></header>
@@ -528,6 +541,8 @@ const postPage = p => {
   <div class="prose">${p.summary ? `<aside class="tldr" aria-label="الجواب المختصر"><b>الجواب المختصر</b><p>${p.summary}</p></aside>` : ''}${p.body}
     <h2>أسئلة شائعة</h2>
     ${p.faq.map(([q, a]) => `<h3>${q}</h3><p>${a}</p>`).join('')}
+    <aside class="guide"><b>هذا المقال جزء من دليل: <a href="/blog/${p.cat.slug}/">${p.cat.h1}</a></b>${p.cat.pillar ? `<p>للحجز وتفاصيل الخدمة: <a href="${p.cat.pillar[0]}">${p.cat.pillar[1]}</a></p>` : ''}
+      <ul>${p.cat.items.filter(x => x !== p).map(x => `<li><a href="/blog/${x.slug}/">${x.title}</a></li>`).join('')}</ul></aside>
     <div class="post__cta"><b>جاهزة تحجزي؟</b> ${ctas()}</div>
   </div>
 </div></div>
@@ -539,6 +554,29 @@ const postPage = p => {
   });
 };
 
+const hubPage = c => {
+  const path = `/blog/${c.slug}/`;
+  return page({
+    path, ogImg: P.cosmetics, title: `${c.h1} | مدونة ${B.name}`, desc: c.intro.slice(0, 155),
+    ogAbs: `${SITE}/photos/${c.items[0].cover}-${PH[c.items[0].cover][0]}.webp`,
+    schema: [{ '@type': 'CollectionPage', '@id': `${SITE}${path}#hub`, name: c.h1, description: c.intro, url: `${SITE}${path}`, inLanguage: 'ar-JO',
+      isPartOf: { '@id': `${SITE}/blog/#blog` }, about: c.name, ...(c.pillar ? { relatedLink: SITE + c.pillar[0] } : {}),
+      mainEntity: { '@type': 'ItemList', numberOfItems: c.items.length, itemListElement: c.items.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE}/blog/${p.slug}/`, name: p.title })) } },
+      crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [c.name, path]])],
+    body: `
+<section class="hero hero--blog"><div class="wrap">
+  <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li><a href="/blog/">المدونة</a></li><li aria-current="page">${c.name}</li></ol></nav>
+  <span class="eyebrow">${c.name} · ${c.items.length} مقالات</span><h1>${words(c.h1, 2)}</h1>
+  <p class="hero__lead">${c.intro}</p>
+  ${c.pillar ? `<p class="hero__cta"><a class="btn" href="${c.pillar[0]}">${c.pillar[1]} ${I.arrow}</a></p>` : ''}
+</div></section>
+<section class="sec sec--light" style="padding-top:60px"><div class="wrap">
+<nav class="catnav" aria-label="تصنيفات المدونة">${cats.map(x => `<a href="/blog/${x.slug}/"${x === c ? ' aria-current="page"' : ''}>${x.name} <small>${x.items.length}</small></a>`).join('')}</nav>
+<div class="pgrid">${c.items.map(postCard).join('')}</div></div></section>
+${ctaBlock()}`,
+  });
+};
+
 const notFound = page({
   path: '/404.html', ogImg: P.cosmetics, title: `الصفحة غير موجودة | ${B.name}`, desc: 'الصفحة المطلوبة غير موجودة.',
   body: `<section class="hero hero--page"><div class="wrap"><span class="eyebrow">404</span><h1>${words('الصفحة مش موجودة', 2)}</h1><p class="hero__lead">يمكن الرابط تغيّر. ارجعي للرئيسية أو احجزي مباشرة.</p><div class="hero__cta"><a class="btn" href="/">الرئيسية</a></div></div></section>`,
@@ -547,7 +585,7 @@ const notFound = page({
 // ---------- write ----------
 rmSync(OUT, { recursive: true, force: true });
 const engage = engageDef();
-const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/engagement-makeup/': engage, '/blog/': blogIndex, ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
+const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/engagement-makeup/': engage, '/blog/': blogIndex, ...Object.fromEntries(cats.map(c => [`/blog/${c.slug}/`, hubPage(c)])), ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
 for (const [p, html] of Object.entries(pages)) {
   mkdirSync(OUT + p, { recursive: true });
   writeFileSync(`${OUT}${p}index.html`, minify.html(rebase(html)));
