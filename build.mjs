@@ -631,6 +631,21 @@ for (const f of readdirSync('src/fonts')) copyFileSync(`src/fonts/${f}`, `${OUT}
 mkdirSync(`${OUT}/photos`, { recursive: true });
 for (const f of readdirSync('src/photos').filter(f => f.endsWith('.webp'))) copyFileSync(`src/photos/${f}`, `${OUT}/photos/${f}`);
 writeFileSync(`${OUT}/.nojekyll`, '');
+// Cloudflare Pages headers (ignored by GitHub Pages)
+writeFileSync(`${OUT}/_headers`, `/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/photos/*
+  Cache-Control: public, max-age=31536000, immutable
+/styles.css
+  Cache-Control: public, max-age=31536000, immutable
+/main.js
+  Cache-Control: public, max-age=31536000, immutable
+`);
 writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 const maxDate = list => list.map(p => p.updated || p.date).sort().pop();
 const lastmod = path => {
