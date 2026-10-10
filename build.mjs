@@ -148,6 +148,7 @@ const footer = () => `<footer class="ftr"><div class="wrap">
       <li><a href="/bridal-makeup/">مكياج العرائس في ${B.city}</a></li>
       <li><a href="/makeup-artist/">ميك أب آرتست في ${B.city}</a></li>
       <li><a href="/home-service/">خدمة تجميل منزلية</a></li>
+      <li><a href="/engagement-makeup/">مكياج خطوبة في ${B.city}</a></li>
       <li><a href="/makeup-courses/">دورات المكياج</a></li>
       <li><a href="/blog/">مدونة التجميل</a></li>
     </ul></div>
@@ -168,6 +169,11 @@ const ctas = (light = false) => `<div class="hero__cta">
 </div>`;
 
 const words = (txt, shineFrom = 99) => txt.split(' ').map((w, i) => `<span class="word"><span style="--i:${i}"${i >= shineFrom ? ' class="shine"' : ''}>${w}</span></span>`).join(' ');
+
+const fmtDate = d => new Date(d).toLocaleDateString('ar-JO', { year: 'numeric', month: 'long', day: 'numeric' });
+const postCard = (p, i = 0) => `<a class="pcard" href="/blog/${p.slug}/" data-reveal style="--d:${i % 3}">
+  <div class="pcard__img">${ph(p.cover, p.title, '(max-width:700px) 100vw, 33vw')}</div>
+  <div class="pcard__body"><span class="tag">${p.tag}</span><h3>${p.title}</h3><p>${p.desc}</p><span class="pcard__more">اقرئي المقال ${I.arrow}</span></div></a>`;
 
 const faqBlock = (items, title = 'أسئلة شائعة') => `<section class="sec sec--light" id="faq" aria-labelledby="faq-h">
   <div class="wrap">
@@ -335,6 +341,7 @@ const home = page({
 </section>
 
 ${faqBlock(faqHome)}
+<section class="sec"><div class="wrap"><div class="sec__head" data-reveal><span class="eyebrow">من المدونة</span><h2>نصائح من خبيرة عرائس</h2></div><div class="pgrid">${posts.slice(0, 3).map(postCard).join('')}</div><p style="text-align:center;margin-top:36px"><a class="btn btn--ghost" href="/blog/">كل المقالات ${I.arrow}</a></p></div></section>
 ${ctaBlock()}`,
 });
 
@@ -413,6 +420,28 @@ const homeSvc = landing({
 ${splitSec({ eyebrow: 'شو بنقدّم بالبيت؟', h: 'تجربة الصالون كاملة', p: 'لا داعي للانتظار أو عناء الطريق.', ticks: ['سشوار وفير وتصفيف شعر لجميع المناسبات', 'ميك أب احترافي يبرز جمالك الطبيعي', 'عرايس الأبيض مع مدام براءة شخصياً'], imgId: P.hair2, alt: 'تسريحة شعر في المنزل', plum: true, wa: B.waHome, badge: '<b>VIP</b>عرايس عمّان: بيت أو فندق' })}`,
 });
 
+const faqEngage = [
+  ['شو أحسن مكياج للخطوبة؟', 'السوفت جلام هو الأكثر طلباً للخطوبة، والناعم أنسب للخطوبة العائلية النهارية، والجلام الكامل لحفلات القاعات بالليل.'],
+  ['وين أعمل مكياج خطوبة بالزرقاء؟', `في ${B.name}، ${B.city} ${B.area}. رقم السنتر ${B.phoneLocal}.`],
+  ['هل بتجوا عالبيت للخطوبة؟', `نعم، الخدمة المنزلية تشمل المكياج والسشوار والتسريحات. للحجز ${B.phoneHomeLocal}.`],
+];
+const engageDef = () => landing({
+  path: '/engagement-makeup/', crumb: 'مكياج خطوبة', hero: P.mua,
+  title: `مكياج خطوبة في ${B.city} | سوفت جلام وتسريحات – ${B.name}`,
+  desc: `مكياج خطوبة في ${B.city}: ناعم أو سوفت جلام أو جلام كامل، مع تسريحة أو لفة حجاب، بالسنتر في ${B.area} أو بالبيت. احجزي ${B.phoneLocal}.`,
+  eyebrow: `مكياج خطوبة · ${B.city}`, h1: 'إطلالة خطوبة بتسرق الأنظار', h1Shine: 2,
+  lead: 'من الناعم للجلام الكامل: مكياج خطوبة متنسّق مع فستانك وحجابك وإضاءة الحفلة، بإيد فريق براءة بيوتي سنتر.',
+  faq: faqEngage,
+  sections: `
+<section class="sec sec--light"><div class="wrap">
+  <div class="sec__head" data-reveal><span class="eyebrow">اختاري لوكك</span><h2>ثلاث ستايلات للخطوبة</h2></div>
+  ${feats([['heart', 'ناعم', 'للخطوبة العائلية والنهارية: بشرة مشرقة ولمسة طبيعية.'], ['sparkle', 'سوفت جلام', 'الأكثر طلباً: بيطلع حلو بالصور وبالحقيقة.'], ['crown', 'جلام كامل', 'لحفلات القاعات بالليل: عيون قوية وإطلالة فخمة.']])}
+</div></section>
+${splitSec({ eyebrow: 'مع الحجاب أو التسريحة', h: 'إطلالة متكاملة', p: 'بنخطط المكياج مع التسريحة أو لفة الحجاب كقطعة وحدة.', ticks: ['تنسيق مع لون الفستان والحجاب', 'تثبيت يدوم طول الحفلة', 'بالسنتر أو بالبيت'], imgId: 'ph:soft-glam', alt: 'مكياج سوفت جلام للخطوبة من أعمال براءة بيوتي سنتر', plum: true })}
+<section class="sec"><div class="wrap"><div class="sec__head" data-reveal><span class="eyebrow">من المدونة</span><h2>اقرئي قبل الخطوبة</h2></div>
+<div class="pgrid">${posts.filter(x => ['engagement-makeup-zarqa', 'hijab-evening-makeup-zarqa', 'makeup-artist-zarqa'].includes(x.slug)).map(postCard).join('')}</div></div></section>`,
+});
+
 const courses = landing({
   path: '/makeup-courses/', crumb: 'دورات المكياج', hero: P.palette,
   title: `دورة مكياج في ${B.city} | دورات خاصة وماستر كلاس مع ${B.owner}`,
@@ -429,11 +458,6 @@ ${splitSec({ eyebrow: 'ليش مع براءة؟', h: 'خبرة حقيقية من
 });
 
 // ---------- BLOG ----------
-const fmtDate = d => new Date(d).toLocaleDateString('ar-JO', { year: 'numeric', month: 'long', day: 'numeric' });
-const postCard = (p, i = 0) => `<a class="pcard" href="/blog/${p.slug}/" data-reveal style="--d:${i % 3}">
-  <div class="pcard__img">${ph(p.cover, p.title, '(max-width:700px) 100vw, 33vw')}</div>
-  <div class="pcard__body"><span class="tag">${p.tag}</span><h3>${p.title}</h3><p>${p.desc}</p><span class="pcard__more">اقرئي المقال ${I.arrow}</span></div></a>`;
-
 const blogIndex = page({
   path: '/blog/', ogImg: P.cosmetics,
   title: `مدونة التجميل | نصائح مكياج وعرائس في الزرقاء وعمّان – ${B.name}`,
@@ -452,12 +476,12 @@ ${ctaBlock()}`,
 });
 
 const postPage = p => {
-  const related = posts.filter(x => x.slug !== p.slug).slice(0, 3);
+  const related = [...posts.filter(x => x.slug !== p.slug && x.tag === p.tag), ...posts.filter(x => x.slug !== p.slug && x.tag !== p.tag)].slice(0, 3);
   const path = `/blog/${p.slug}/`;
   return page({
     path, ogImg: P.cosmetics, title: `${p.title} | ${B.name}`, desc: p.desc,
     ogAbs: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`,
-    schema: [{ '@type': 'BlogPosting', '@id': `${SITE}${path}#post`, headline: p.title, description: p.desc, inLanguage: 'ar-JO',
+    schema: [{ '@type': 'BlogPosting', '@id': `${SITE}${path}#post`, headline: p.title, description: p.summary || p.desc, inLanguage: 'ar-JO',
       datePublished: p.date, dateModified: p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
       image: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`, mainEntityOfPage: `${SITE}${path}`,
       author: { '@type': 'Person', name: B.owner, jobTitle: 'خبيرة مكياج', url: B.ig }, publisher: { '@id': salonId } },
@@ -472,7 +496,7 @@ const postPage = p => {
 </div></header>
 <div class="sec sec--light post"><div class="wrap post__grid">
   <figure class="post__cover">${ph(p.cover, p.title, '(max-width:900px) 100vw, 380px', true)}</figure>
-  <div class="prose">${p.body}
+  <div class="prose">${p.summary ? `<aside class="tldr" aria-label="الجواب المختصر"><b>الجواب المختصر</b><p>${p.summary}</p></aside>` : ''}${p.body}
     <h2>أسئلة شائعة</h2>
     ${p.faq.map(([q, a]) => `<h3>${q}</h3><p>${a}</p>`).join('')}
     <div class="post__cta"><b>جاهزة تحجزي؟</b> ${ctas()}</div>
@@ -493,7 +517,8 @@ const notFound = page({
 
 // ---------- write ----------
 rmSync(OUT, { recursive: true, force: true });
-const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/blog/': blogIndex, ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
+const engage = engageDef();
+const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/engagement-makeup/': engage, '/blog/': blogIndex, ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
 for (const [p, html] of Object.entries(pages)) {
   mkdirSync(OUT + p, { recursive: true });
   writeFileSync(`${OUT}${p}index.html`, minify.html(rebase(html)));
@@ -526,6 +551,7 @@ writeFileSync(`${OUT}/llms.txt`, `# ${B.name} (${B.nameEn})
 - [ميك أب آرتست في ${B.city}](${SITE}/makeup-artist/): مكياج سهرات ومناسبات وتسريحات
 - [خدمة تجميل منزلية](${SITE}/home-service/): مكياج وسشوار في المنزل، وVIP لعرايس عمّان
 - [دورات المكياج](${SITE}/makeup-courses/): دورات خاصة وماستر كلاس
+- [مكياج خطوبة في ${B.city}](${SITE}/engagement-makeup/)
 - [المدونة](${SITE}/blog/)
 ${posts.map(p => `- [${p.title}](${SITE}/blog/${p.slug}/): ${p.desc}`).join('\n')}
 
