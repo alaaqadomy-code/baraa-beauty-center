@@ -2,6 +2,9 @@
 import { mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, readdirSync } from 'node:fs';
 import { minify } from './minify.mjs';
 import { posts } from './content/blog.mjs';
+import { createHash } from 'node:crypto';
+const ver = f => createHash('md5').update(readFileSync(f)).digest('hex').slice(0, 8); // cache-busting
+const V_CSS = ver('src/styles.css'), V_JS = ver('src/main.js');
 
 const SITE = (process.env.SITE_URL || 'https://idresalalaree-debug.github.io/baraa-beauty-center').replace(/\/$/, '');
 const OUT = 'docs';
@@ -258,14 +261,14 @@ ${lcp ? `<link rel="preload" as="image" media="(max-width:900px)" imagesrcset="$
 <link rel="preload" as="image" media="(min-width:901px)" imagesrcset="${U(lcp, 1600, 992)} 1600w, ${U(lcp, 2200, 1364)} 2200w" imagesizes="100vw" fetchpriority="high">` : ''}
 ${preload}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&text=${encodeURIComponent('براءة')}&display=swap">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles.css?v=${V_CSS}">
 ${ld(path, schema)}
 </head>
 <body>
 ${header(path)}
 <main id="main">${body}</main>
 ${footer()}
-<script src="/main.js" defer></script>
+<script src="/main.js?v=${V_JS}" defer></script>
 </body>
 </html>`;
 
