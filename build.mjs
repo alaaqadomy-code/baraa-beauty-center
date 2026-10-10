@@ -640,7 +640,7 @@ writeFileSync(`${OUT}/_headers`, `/*
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
 /photos/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=2592000
 /styles.css
   Cache-Control: public, max-age=31536000, immutable
 /main.js
