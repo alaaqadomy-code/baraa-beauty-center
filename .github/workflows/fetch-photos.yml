@@ -1,0 +1,47 @@
+name: fetch-instagram-photos
+on:
+  push:
+    branches: [fetch-photos]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download images
+        run: |
+          set -x
+          mkdir -p raw
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
+          # 1) Instagram public profile JSON (often works without login)
+          curl -sSL -A "$UA" -H "X-IG-App-ID: 936619743392459" "https://www.instagram.com/api/v1/users/web_profile_info/?username=baraa_beauty_center" -o raw/ig.json -w "ig %{http_code}\n" || true
+          python3 - <<'PY' || true
+          import json,urllib.request,os
+          d=json.load(open('raw/ig.json'))['data']['user']
+          edges=d['edge_owner_to_timeline_media']['edges']
+          out=[]
+          for i,e in enumerate(edges):
+              n=e['node']; cap=(n.get('edge_media_to_caption',{}).get('edges') or [{}])[0].get('node',{}).get('text','')
+              urls=[n['display_url']]
+              for c in (n.get('edge_sidecar_to_children',{}) or {}).get('edges',[]): urls.append(c['node']['display_url'])
+              for j,u in enumerate(dict.fromkeys(urls)):
+                  fn=f"raw/ig_{i:02d}_{j}.jpg"
+                  try:
+                      req=urllib.request.Request(u,headers={'User-Agent':'Mozilla/5.0'}); open(fn,'wb').write(urllib.request.urlopen(req,timeout=30).read()); out.append({'file':fn,'caption':cap[:300],'video':n.get('is_video')})
+                  except Exception as ex: print('fail',u[:80],ex)
+          json.dump(out,open('raw/manifest.json','w'),ensure_ascii=False,indent=1)
+          print('ig images',len(out))
+          PY
+          # 2) Fallback: imginn
+          if [ ! -s raw/manifest.json ]; then
+            curl -sSL -A "$UA" https://imginn.com/baraa_beauty_center/ -o raw/imginn.html -w "imginn %{http_code}\n" || true
+            grep -oE 'https://s[0-9]+\.imginn\.com/[^"]+\.jpg[^"]*' raw/imginn.html | sed 's/&amp;/\&/g' | sort -u | head -40 > raw/urls.txt || true
+            n=0; while read u; do n=$((n+1)); curl -sSL -A "$UA" -e https://imginn.com/ "$u" -o raw/imginn_$n.jpg; done < raw/urls.txt
+          fi
+          ls -la raw; file raw/* | head -60
+      - name: Commit
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add raw && git commit -m "Fetched Instagram photos" && git push || echo nothing
