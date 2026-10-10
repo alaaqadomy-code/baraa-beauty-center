@@ -1,6 +1,7 @@
 // Static site generator (no deps): node build.mjs  ->  ./docs
 import { mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, readdirSync } from 'node:fs';
 import { minify } from './minify.mjs';
+import { posts } from './content/blog.mjs';
 
 const SITE = (process.env.SITE_URL || 'https://idresalalaree-debug.github.io/baraa-beauty-center').replace(/\/$/, '');
 const OUT = 'docs';
@@ -121,7 +122,7 @@ const faqCourses = [
 
 // ---------- partials ----------
 const nav = cur => {
-  const items = [['/', 'الرئيسية'], ['/bridal-makeup/', 'مكياج العرائس'], ['/makeup-artist/', 'ميك أب آرتست'], ['/home-service/', 'خدمة منزلية'], ['/makeup-courses/', 'الدورات']];
+  const items = [['/', 'الرئيسية'], ['/bridal-makeup/', 'مكياج العرائس'], ['/makeup-artist/', 'ميك أب آرتست'], ['/home-service/', 'خدمة منزلية'], ['/makeup-courses/', 'الدورات'], ['/blog/', 'المدونة']];
   return items.map(([h, t]) => `<a href="${h}"${h === cur ? ' aria-current="page"' : ''}>${t}</a>`).join('');
 };
 const header = cur => `<a class="skip" href="#main">انتقلي إلى المحتوى</a>
@@ -148,6 +149,7 @@ const footer = () => `<footer class="ftr"><div class="wrap">
       <li><a href="/makeup-artist/">ميك أب آرتست في ${B.city}</a></li>
       <li><a href="/home-service/">خدمة تجميل منزلية</a></li>
       <li><a href="/makeup-courses/">دورات المكياج</a></li>
+      <li><a href="/blog/">مدونة التجميل</a></li>
     </ul></div>
     <div><h3>تواصلي معنا</h3><ul>
       <li>السنتر: <a href="tel:${B.phone}" dir="ltr">${B.phoneLocal}</a></li>
@@ -205,7 +207,7 @@ const crumbLD = list => ({ '@type': 'BreadcrumbList', itemListElement: list.map(
 const serviceLD = (name, desc, path) => ({ '@type': 'Service', name, description: desc, serviceType: name, provider: { '@id': salonId }, areaServed: { '@type': 'City', name: B.city }, url: SITE + path });
 
 // ---------- page shell ----------
-const page = ({ path, title, desc, ogImg, lcp, body, schema = [] }) => `<!doctype html>
+const page = ({ path, title, desc, ogImg, ogAbs, lcp, body, schema = [] }) => `<!doctype html>
 <html lang="ar-JO" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -218,8 +220,8 @@ const page = ({ path, title, desc, ogImg, lcp, body, schema = [] }) => `<!doctyp
 <meta name="geo.region" content="JO-AZ"><meta name="geo.placename" content="${B.city}">
 <meta property="og:type" content="website"><meta property="og:locale" content="ar_JO"><meta property="og:site_name" content="${B.name}">
 <meta property="og:title" content="${title}"><meta property="og:description" content="${desc}">
-<meta property="og:url" content="${SITE}${path}"><meta property="og:image" content="${U(ogImg, 1200, 630)}">
-<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:url" content="${SITE}${path}"><meta property="og:image" content="${ogAbs || U(ogImg, 1200, 630)}">
+${ogAbs ? '' : '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'}
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/site.webmanifest">
@@ -426,6 +428,64 @@ const courses = landing({
 ${splitSec({ eyebrow: 'ليش مع براءة؟', h: 'خبرة حقيقية من آلاف الإطلالات', p: 'تعلّمي من خبيرة اشتغلت مع أكثر من 1000 عروس.', ticks: ['تطبيق عملي', 'أسرار الثبات والتسريحة والطرحة', `السنتر في ${B.city}، ${B.area}`], imgId: 'ph:turquoise-liner', alt: 'تقنية التركواز تحت العين من أعمال براءة علي', plum: true })}`,
 });
 
+// ---------- BLOG ----------
+const fmtDate = d => new Date(d).toLocaleDateString('ar-JO', { year: 'numeric', month: 'long', day: 'numeric' });
+const postCard = (p, i = 0) => `<a class="pcard" href="/blog/${p.slug}/" data-reveal style="--d:${i % 3}">
+  <div class="pcard__img">${ph(p.cover, p.title, '(max-width:700px) 100vw, 33vw')}</div>
+  <div class="pcard__body"><span class="tag">${p.tag}</span><h3>${p.title}</h3><p>${p.desc}</p><span class="pcard__more">اقرئي المقال ${I.arrow}</span></div></a>`;
+
+const blogIndex = page({
+  path: '/blog/', ogImg: P.cosmetics,
+  title: `مدونة التجميل | نصائح مكياج وعرائس في الزرقاء وعمّان – ${B.name}`,
+  desc: `مدونة ${B.name}: أدلة ونصائح عن مكياج العرايس، اختيار أفضل صالون في الزرقاء، الخدمة المنزلية في عمّان، ودورات المكياج في الأردن.`,
+  schema: [{ '@type': 'Blog', '@id': `${SITE}/blog/#blog`, name: `مدونة ${B.name}`, url: `${SITE}/blog/`, inLanguage: 'ar-JO', publisher: { '@id': salonId },
+    blogPost: posts.map(p => ({ '@type': 'BlogPosting', headline: p.title, url: `${SITE}/blog/${p.slug}/`, datePublished: p.date })) },
+    crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/']])],
+  body: `
+<section class="hero hero--blog"><div class="wrap">
+  <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li aria-current="page">المدونة</li></ol></nav>
+  <span class="eyebrow">مدونة براءة</span><h1>${words('أسرار الجمال من خبيرة عرائس', 2)}</h1>
+  <p class="hero__lead">أدلة ونصائح عملية عن المكياج والعرائس والتسريحات، من خبرة أكثر من 1000 عروس.</p>
+</div></section>
+<section class="sec sec--light" style="padding-top:70px"><div class="wrap"><div class="pgrid">${posts.map(postCard).join('')}</div></div></section>
+${ctaBlock()}`,
+});
+
+const postPage = p => {
+  const related = posts.filter(x => x.slug !== p.slug).slice(0, 3);
+  const path = `/blog/${p.slug}/`;
+  return page({
+    path, ogImg: P.cosmetics, title: `${p.title} | ${B.name}`, desc: p.desc,
+    ogAbs: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`,
+    schema: [{ '@type': 'BlogPosting', '@id': `${SITE}${path}#post`, headline: p.title, description: p.desc, inLanguage: 'ar-JO',
+      datePublished: p.date, dateModified: p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
+      image: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`, mainEntityOfPage: `${SITE}${path}`,
+      author: { '@type': 'Person', name: B.owner, jobTitle: 'خبيرة مكياج', url: B.ig }, publisher: { '@id': salonId } },
+      faqLD(p.faq), crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [p.title, path]])],
+    body: `
+<article>
+<header class="hero hero--blog"><div class="wrap">
+  <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li><a href="/blog/">المدونة</a></li><li aria-current="page">${p.tag}</li></ol></nav>
+  <span class="eyebrow">${p.tag}</span>
+  <h1 class="post-h1">${p.title}</h1>
+  <p class="post-meta">بقلم <b>${B.owner}</b>، خبيرة مكياج · <time datetime="${p.date}">${fmtDate(p.date)}</time></p>
+</div></header>
+<div class="sec sec--light post"><div class="wrap post__grid">
+  <figure class="post__cover">${ph(p.cover, p.title, '(max-width:900px) 100vw, 380px', true)}</figure>
+  <div class="prose">${p.body}
+    <h2>أسئلة شائعة</h2>
+    ${p.faq.map(([q, a]) => `<h3>${q}</h3><p>${a}</p>`).join('')}
+    <div class="post__cta"><b>جاهزة تحجزي؟</b> ${ctas()}</div>
+  </div>
+</div></div>
+</article>
+<section class="sec sec--plum"><div class="wrap">
+  <div class="sec__head" data-reveal><span class="eyebrow">اقرئي كمان</span><h2>مقالات ممكن تعجبك</h2></div>
+  <div class="pgrid">${related.map(postCard).join('')}</div>
+</div></section>`,
+  });
+};
+
 const notFound = page({
   path: '/404.html', ogImg: P.cosmetics, title: `الصفحة غير موجودة | ${B.name}`, desc: 'الصفحة المطلوبة غير موجودة.',
   body: `<section class="hero hero--page"><div class="wrap"><span class="eyebrow">404</span><h1>${words('الصفحة مش موجودة', 2)}</h1><p class="hero__lead">يمكن الرابط تغيّر. ارجعي للرئيسية أو احجزي مباشرة.</p><div class="hero__cta"><a class="btn" href="/">الرئيسية</a></div></div></section>`,
@@ -433,7 +493,7 @@ const notFound = page({
 
 // ---------- write ----------
 rmSync(OUT, { recursive: true, force: true });
-const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses };
+const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/blog/': blogIndex, ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
 for (const [p, html] of Object.entries(pages)) {
   mkdirSync(OUT + p, { recursive: true });
   writeFileSync(`${OUT}${p}index.html`, minify.html(rebase(html)));
@@ -466,6 +526,8 @@ writeFileSync(`${OUT}/llms.txt`, `# ${B.name} (${B.nameEn})
 - [ميك أب آرتست في ${B.city}](${SITE}/makeup-artist/): مكياج سهرات ومناسبات وتسريحات
 - [خدمة تجميل منزلية](${SITE}/home-service/): مكياج وسشوار في المنزل، وVIP لعرايس عمّان
 - [دورات المكياج](${SITE}/makeup-courses/): دورات خاصة وماستر كلاس
+- [المدونة](${SITE}/blog/)
+${posts.map(p => `- [${p.title}](${SITE}/blog/${p.slug}/): ${p.desc}`).join('\n')}
 
 ## الخدمات
 ${services.map(s => `- ${s.t}: ${s.d}`).join('\n')}
