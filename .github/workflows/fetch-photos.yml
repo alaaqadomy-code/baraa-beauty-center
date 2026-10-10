@@ -2,7 +2,6 @@ name: fetch-instagram-photos
 on:
   push:
     branches: [fetch-photos]
-  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -10,22 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download images
+      - name: Google Maps lookup
         run: |
-          mkdir -p raw/img
+          mkdir -p raw/gmaps
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36"
-          n=0
-          while read u; do
-            [ -z "$u" ] && continue; n=$((n+1)); f=$(printf "raw/img/p%02d.jpg" $n)
-            # direct Instagram CDN: https://<_nc_ht>/v/<t51...>/<file>?<rest>
-            q="${u#*\?}"; path="${q%%\?*}"; rest="${q#*\?}"
-            host=$(echo "$rest" | grep -oE '_nc_ht=[^&]+' | cut -d= -f2)
-            cdn="https://$host/v/$path?$rest"
-            curl -sSL -A "$UA" "$cdn" -o "$f" -w "$n cdn %{http_code} %{content_type}\n" || true
-            if ! file "$f" | grep -q JPEG; then curl -sSL -A "$UA" -e https://imginn.com/ "$u" -o "$f" -w "$n imginn %{http_code} %{content_type}\n" || true; fi
-          done < raw/urls_in.txt
-          file raw/img/* || true
+          for q in "براءة بيوتي سنتر الزرقاء" "Baraa Beauty Center Zarqa"; do
+            f="raw/gmaps/$(echo "$q" | md5sum | cut -c1-6).html"
+            curl -sSL -A "$UA" -G "https://www.google.com/maps/search/" --data-urlencode "api=1" --data-urlencode "query=$q" -H "Accept-Language: ar,en" -b "CONSENT=YES+" -o "$f" -w "$q %{http_code} %{size_download}\n"
+          done
+          npx -y playwright@1.47.2 install --with-deps chromium >/dev/null 2>&1 || true
+          cat > shot.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const b = await chromium.launch(); const pg = await b.newPage({ locale: 'ar-JO', viewport: { width: 1280, height: 900 } });
+          await pg.goto('https://www.google.com/maps/search/' + encodeURIComponent('براءة بيوتي سنتر الزرقاء') + '?hl=ar', { waitUntil: 'domcontentloaded' });
+          await pg.waitForTimeout(8000);
+          const first = await pg.$('a.hfpxzc'); if (first) { await first.click(); await pg.waitForTimeout(6000); }
+          await pg.screenshot({ path: 'raw/gmaps/shot.png' });
+          const fs = await import('node:fs'); fs.writeFileSync('raw/gmaps/text.txt', (await pg.innerText('body')) + '\n\nURL: ' + pg.url());
+          await b.close();
+          JS
+          npm i playwright@1.47.2 >/dev/null 2>&1 && node shot.mjs || echo "playwright failed"
+          ls -la raw/gmaps
       - name: Commit
         run: |
           git config user.name "github-actions"; git config user.email "actions@github.com"
-          git add raw && git commit -m "Fetched Instagram photos" && git push || echo nothing
+          git add raw && git commit -m "Google Maps lookup" && git push || echo nothing
