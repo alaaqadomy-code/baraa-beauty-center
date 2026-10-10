@@ -18,6 +18,9 @@ const OUT = 'docs';
 const BASE = new URL(SITE).pathname.replace(/\/$/, ''); // '' on custom domain, '/repo' on GitHub project pages
 const rebase = h => h.replace(/(href|src)="\/(?!\/)/g, `$1="${BASE}/`);
 const TODAY = new Date().toISOString().slice(0, 10);
+import { execSync } from 'node:child_process';
+const gitDate = (...f) => { try { return execSync(`git log -1 --format=%cs -- ${f.join(' ')}`, { encoding: 'utf8' }).trim() || TODAY; } catch { return TODAY; } };
+const SITE_UPDATED = gitDate('build.mjs', 'src');
 
 const B = {
   name: 'براءة بيوتي سنتر', nameEn: 'Baraa Beauty Center',
@@ -165,6 +168,7 @@ const footer = () => `<footer class="ftr"><div class="wrap">
       <li><a href="/engagement-makeup/">مكياج خطوبة في ${B.city}</a></li>
       <li><a href="/makeup-courses/">دورات المكياج</a></li>
       <li><a href="/blog/">مدونة التجميل</a></li>
+      <li><a href="/about-baraa/">عن ${B.owner}</a></li>
     </ul></div>
     <div><h3>تواصلي معنا</h3><ul>
       <li>السنتر: <a href="tel:${B.phone}" dir="ltr">${B.phoneLocal}</a></li>
@@ -218,6 +222,7 @@ const ctaBlock = (h = 'جاهزة لإطلالتك الجاية؟', p = 'احج�
 
 // ---------- schema ----------
 const salonId = `${SITE}/#salon`;
+const personId = `${SITE}/about-baraa/#person`;
 const salonLD = {
   '@type': 'BeautySalon', '@id': salonId,
   name: B.name, alternateName: B.nameEn, url: SITE + '/',
@@ -227,7 +232,7 @@ const salonLD = {
   address: { '@type': 'PostalAddress', streetAddress: B.area, addressLocality: B.city, addressRegion: 'محافظة الزرقاء', addressCountry: 'JO' },
   areaServed: [{ '@type': 'City', name: B.city }, { '@type': 'City', name: 'عمّان' }],
   sameAs: [B.fb, B.ig, B.snap, B.maps],
-  founder: { '@type': 'Person', name: B.owner, alternateName: "Bara'a Ali", jobTitle: 'خبيرة مكياج', sameAs: [B.ig, B.snap] },
+  founder: { '@type': 'Person', '@id': personId, url: `${SITE}/about-baraa/`, name: B.owner, alternateName: "Bara'a Ali", jobTitle: 'خبيرة مكياج', sameAs: [B.ig, B.snap] },
   contactPoint: [{ '@type': 'ContactPoint', telephone: B.phone, contactType: 'reservations', name: 'رقم السنتر' }, { '@type': 'ContactPoint', telephone: B.phoneHome, contactType: 'reservations', name: 'الخدمة المنزلية' }],
   knowsLanguage: ['ar'],
   hasOfferCatalog: { '@type': 'OfferCatalog', name: 'خدمات التجميل', itemListElement: services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.t, description: s.d } })) },
@@ -263,12 +268,10 @@ ${ogAbs ? '' : '<meta property="og:image:width" content="1200"><meta property="o
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="/fonts/ibm-plex-sans-arabic-400-arabic.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/el-messiri-500-arabic.woff2" as="font" type="font/woff2" crossorigin>
 ${lcp ? `<link rel="preload" as="image" media="(max-width:900px)" imagesrcset="${U(lcp, 640, 1024)} 640w, ${U(lcp, 1080, 1728)} 1080w" imagesizes="100vw" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width:901px)" imagesrcset="${U(lcp, 1600, 992)} 1600w, ${U(lcp, 2200, 1364)} 2200w" imagesizes="100vw" fetchpriority="high">` : ''}
-${preload}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&text=${encodeURIComponent('براءة')}&display=swap">
-<link rel="stylesheet" href="/styles.css?v=${V_CSS}">
+${preload}<link rel="stylesheet" href="/styles.css?v=${V_CSS}">
 ${ld(path, schema)}
 </head>
 <body>
@@ -524,9 +527,9 @@ const postPage = p => {
     path, ogImg: P.cosmetics, title: `${p.title} | ${B.name}`, desc: p.desc,
     ogAbs: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`,
     schema: [{ '@type': 'BlogPosting', '@id': `${SITE}${path}#post`, headline: p.title, description: p.summary || p.desc, inLanguage: 'ar-JO',
-      datePublished: p.date, dateModified: p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
+      datePublished: p.date, dateModified: p.updated || p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
       image: `${SITE}/photos/${p.cover}-${PH[p.cover][0]}.webp`, mainEntityOfPage: `${SITE}${path}`,
-      author: { '@type': 'Person', name: B.owner, jobTitle: 'خبيرة مكياج', url: B.ig }, publisher: { '@id': salonId } },
+      author: { '@type': 'Person', '@id': personId, name: B.owner, jobTitle: 'خبيرة مكياج', url: `${SITE}/about-baraa/` }, publisher: { '@id': salonId } },
       faqLD(p.faq), crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [p.cat.name, `/blog/${p.cat.slug}/`], [p.title, path]])],
     body: `
 <article>
@@ -534,7 +537,7 @@ const postPage = p => {
   <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li><a href="/blog/">المدونة</a></li><li><a href="/blog/${p.cat.slug}/">${p.cat.name}</a></li><li aria-current="page">${p.title}</li></ol></nav>
   <a class="eyebrow" href="/blog/${p.cat.slug}/">${p.cat.name}</a>
   <h1 class="post-h1">${p.title}</h1>
-  <p class="post-meta">بقلم <b>${B.owner}</b>، خبيرة مكياج · <time datetime="${p.date}">${fmtDate(p.date)}</time></p>
+  <p class="post-meta">بقلم <a href="/about-baraa/"><b>${B.owner}</b></a>، خبيرة مكياج · <time datetime="${p.date}">${fmtDate(p.date)}</time></p>
 </div></header>
 <div class="sec sec--light post"><div class="wrap post__grid">
   <figure class="post__cover">${ph(p.cover, p.title, '(max-width:900px) 100vw, 380px', true)}</figure>
@@ -577,6 +580,35 @@ ${ctaBlock()}`,
   });
 };
 
+const about = page({
+  path: '/about-baraa/', ogImg: P.cosmetics, ogAbs: `${SITE}/photos/bride-pearls-${PH['bride-pearls'][0]}.webp`,
+  title: `${B.owner} | خبيرة مكياج عرائس في ${B.city} – ${B.name}`,
+  desc: `تعرّفي على ${B.owner}، خبيرة مكياج العرائس وصاحبة ${B.name} في ${B.city}، ${B.area}. أكثر من 1000 عروس، ودورات مكياج خاصة وماستر كلاس.`,
+  schema: [{ '@type': 'ProfilePage', '@id': `${SITE}/about-baraa/#page`, url: `${SITE}/about-baraa/`, inLanguage: 'ar-JO', mainEntity: {
+      '@type': 'Person', '@id': personId, name: B.owner, alternateName: "Bara'a Ali", jobTitle: 'خبيرة مكياج عرائس', url: `${SITE}/about-baraa/`,
+      image: `${SITE}/photos/bride-pearls-${PH['bride-pearls'][0]}.webp`, worksFor: { '@id': salonId },
+      workLocation: { '@type': 'Place', name: `${B.area}، ${B.city}` }, sameAs: [B.ig, B.snap],
+      knowsAbout: ['مكياج العرائس', 'مكياج عروس الحنّة', 'مكياج السهرات', 'مكياج المحجبات', 'تسريحات العرائس مع الطرحة', 'تعليم المكياج'] } },
+    crumbLD([['الرئيسية', '/'], [`عن ${B.owner}`, '/about-baraa/']])],
+  body: `
+<section class="hero hero--blog"><div class="wrap">
+  <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="/">الرئيسية</a></li><li aria-current="page">عن ${B.owner}</li></ol></nav>
+  <span class="eyebrow">خبيرة مكياج · ${B.city}</span><h1>${words(B.owner + ' خبيرة العرائس', 1)}</h1>
+  <p class="hero__lead">صاحبة ${B.name} في ${B.area}، وإيدها كانت بإطلالة أكثر من 1000 عروس.</p>
+</div></section>
+${splitSec({ eyebrow: 'مين براءة؟', h: 'خبرة بتبان بالتفاصيل', p: `${B.owner} خبيرة مكياج عرائس وصاحبة ${B.name} في ${B.city}. بتشتغل بنفسها على العرايس بالسنتر، وبتجهّز عرايس عمّان بالبيت أو الفندق، وبتعلّم المكياج بدورات خاصة وماستر كلاس.`, ticks: ['أكثر من 1000 عروس', 'مكياج عرائس وعروس الحنّة والمرافقات', 'سهرات وسشوار وتسريحات مع الطرحة', 'دورات خاصة وماستر كلاس'], imgId: 'ph:bride-pearls', alt: `مكياج عروس من أعمال ${B.owner}` })}
+<section class="sec sec--light"><div class="wrap">
+  <div class="sec__head" data-reveal><span class="eyebrow">من أعمالها</span><h2>إطلالات بتحكي عن الشغل</h2></div>
+  <div class="gallery">${WORK.slice(0, 6).map(([n, alt, cap]) => `<figure>${ph(n, alt, '(max-width:600px) 100vw, 33vw')}<figcaption>${cap}</figcaption></figure>`).join('')}</div>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="sec__head" data-reveal><span class="eyebrow">بقلم ${B.owner}</span><h2>أدلة من خبرتها</h2></div>
+  <nav class="catnav" aria-label="تصنيفات المدونة">${cats.map(c => `<a href="/blog/${c.slug}/">${c.name} <small>${c.items.length}</small></a>`).join('')}</nav>
+  <div class="pgrid">${cats.map(c => c.items[0]).slice(0, 6).map(postCard).join('')}</div>
+</div></section>
+${ctaBlock()}`,
+});
+
 const notFound = page({
   path: '/404.html', ogImg: P.cosmetics, title: `الصفحة غير موجودة | ${B.name}`, desc: 'الصفحة المطلوبة غير موجودة.',
   body: `<section class="hero hero--page"><div class="wrap"><span class="eyebrow">404</span><h1>${words('الصفحة مش موجودة', 2)}</h1><p class="hero__lead">يمكن الرابط تغيّر. ارجعي للرئيسية أو احجزي مباشرة.</p><div class="hero__cta"><a class="btn" href="/">الرئيسية</a></div></div></section>`,
@@ -585,20 +617,29 @@ const notFound = page({
 // ---------- write ----------
 rmSync(OUT, { recursive: true, force: true });
 const engage = engageDef();
-const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/engagement-makeup/': engage, '/blog/': blogIndex, ...Object.fromEntries(cats.map(c => [`/blog/${c.slug}/`, hubPage(c)])), ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
+const pages = { '/': home, '/bridal-makeup/': bridal, '/makeup-artist/': mua, '/home-service/': homeSvc, '/makeup-courses/': courses, '/engagement-makeup/': engage, '/blog/': blogIndex, '/about-baraa/': about, ...Object.fromEntries(cats.map(c => [`/blog/${c.slug}/`, hubPage(c)])), ...Object.fromEntries(posts.map(p => [`/blog/${p.slug}/`, postPage(p)])) };
 for (const [p, html] of Object.entries(pages)) {
   mkdirSync(OUT + p, { recursive: true });
   writeFileSync(`${OUT}${p}index.html`, minify.html(rebase(html)));
 }
 writeFileSync(`${OUT}/404.html`, minify.html(rebase(notFound)));
-writeFileSync(`${OUT}/styles.css`, minify.css(await (await import('node:fs/promises')).readFile('src/styles.css', 'utf8')));
+writeFileSync(`${OUT}/styles.css`, minify.css(readFileSync('src/fonts.css', 'utf8') + readFileSync('src/styles.css', 'utf8')));
 copyFileSync('src/main.js', `${OUT}/main.js`);
 copyFileSync('src/favicon.svg', `${OUT}/favicon.svg`);
+mkdirSync(`${OUT}/fonts`, { recursive: true });
+for (const f of readdirSync('src/fonts')) copyFileSync(`src/fonts/${f}`, `${OUT}/fonts/${f}`);
 mkdirSync(`${OUT}/photos`, { recursive: true });
 for (const f of readdirSync('src/photos').filter(f => f.endsWith('.webp'))) copyFileSync(`src/photos/${f}`, `${OUT}/photos/${f}`);
 writeFileSync(`${OUT}/.nojekyll`, '');
 writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
-writeFileSync(`${OUT}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${Object.keys(pages).map(p => `  <url><loc>${SITE}${p}</loc><lastmod>${TODAY}</lastmod></url>`).join('\n')}\n</urlset>\n`);
+const maxDate = list => list.map(p => p.updated || p.date).sort().pop();
+const lastmod = path => {
+  const post = posts.find(p => path === `/blog/${p.slug}/`); if (post) return post.updated || post.date;
+  const cat = cats.find(c => path === `/blog/${c.slug}/`); if (cat) return [maxDate(cat.items), SITE_UPDATED].sort().pop();
+  if (path === '/blog/') return [maxDate(posts), SITE_UPDATED].sort().pop();
+  return SITE_UPDATED;
+};
+writeFileSync(`${OUT}/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${Object.keys(pages).map(p => `  <url><loc>${SITE}${p}</loc><lastmod>${lastmod(p)}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 writeFileSync(`${OUT}/site.webmanifest`, JSON.stringify({ name: B.name, short_name: 'براءة', lang: 'ar', dir: 'rtl', start_url: BASE + '/', display: 'standalone', background_color: '#120a0f', theme_color: '#120a0f', icons: [{ src: BASE + '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }] }));
 writeFileSync(`${OUT}/llms.txt`, `# ${B.name} (${B.nameEn})
 
@@ -619,8 +660,11 @@ writeFileSync(`${OUT}/llms.txt`, `# ${B.name} (${B.nameEn})
 - [خدمة تجميل منزلية](${SITE}/home-service/): مكياج وسشوار في المنزل، وVIP لعرايس عمّان
 - [دورات المكياج](${SITE}/makeup-courses/): دورات خاصة وماستر كلاس
 - [مكياج خطوبة في ${B.city}](${SITE}/engagement-makeup/)
+- [عن ${B.owner}](${SITE}/about-baraa/): خبيرة المكياج وصاحبة السنتر
 - [المدونة](${SITE}/blog/)
-${posts.map(p => `- [${p.title}](${SITE}/blog/${p.slug}/): ${p.desc}`).join('\n')}
+
+## المدونة حسب الموضوع
+${cats.map(c => `### [${c.name}](${SITE}/blog/${c.slug}/)\n${c.intro}\n${c.items.map(p => `- [${p.title}](${SITE}/blog/${p.slug}/): ${p.summary || p.desc}`).join('\n')}`).join('\n\n')}
 
 ## الخدمات
 ${services.map(s => `- ${s.t}: ${s.d}`).join('\n')}
