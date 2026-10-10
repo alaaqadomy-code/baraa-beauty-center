@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://idresalalaree-debug.github.io/baraa-beauty-center/sitemap.xml

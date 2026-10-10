@@ -1,0 +1,71 @@
+(() => {
+  const $ = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => [...c.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(pointer: fine)').matches;
+
+  // header
+  const hdr = $('.hdr');
+  const onScroll = () => hdr.classList.toggle('is-scrolled', scrollY > 40);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // mobile menu
+  const burger = $('.burger');
+  burger?.addEventListener('click', () => {
+    const open = document.body.classList.toggle('menu-open');
+    burger.setAttribute('aria-expanded', open);
+  });
+  $$('.nav a').forEach(a => a.addEventListener('click', () => {
+    document.body.classList.remove('menu-open'); burger?.setAttribute('aria-expanded', false);
+  }));
+
+  // reveal
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }), { rootMargin: '0px 0px -12% 0px' });
+  $$('[data-reveal]').forEach(el => io.observe(el));
+
+  // hero slideshow (non-active slides load lazily after LCP)
+  const slides = $$('.hero__media img'), dots = $$('.hero__dots button');
+  if (slides.length > 1) {
+    let i = 0, t;
+    const go = n => {
+      slides[i].classList.remove('is-active'); dots[i]?.setAttribute('aria-current', 'false');
+      i = (n + slides.length) % slides.length;
+      slides[i].classList.add('is-active'); dots[i]?.setAttribute('aria-current', 'true');
+    };
+    const play = () => { if (!reduce) t = setInterval(() => go(i + 1), 6500); };
+    dots.forEach((d, n) => d.addEventListener('click', () => { clearInterval(t); go(n); play(); }));
+    addEventListener('load', () => setTimeout(play, 1500));
+  }
+
+  // sticky story
+  const imgs = $$('.story__media img'), steps = $$('.step');
+  if (steps.length) {
+    const so = new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting) return;
+      const n = +e.target.dataset.step;
+      steps.forEach(s => s.classList.toggle('is-active', s === e.target));
+      imgs.forEach((im, k) => im.classList.toggle('is-active', k === n));
+    }), { rootMargin: '-45% 0px -45% 0px' });
+    steps.forEach(s => so.observe(s));
+  }
+
+  if (fine && !reduce) {
+    // cursor glow
+    const g = document.createElement('div'); g.className = 'glow'; g.setAttribute('aria-hidden', 'true');
+    document.body.append(g);
+    let x = 0, y = 0, cx = 0, cy = 0, raf;
+    const loop = () => { cx += (x - cx) * .12; cy += (y - cy) * .12; g.style.transform = `translate(${cx}px,${cy}px)`; raf = requestAnimationFrame(loop); };
+    addEventListener('pointermove', e => { x = e.clientX; y = e.clientY; if (!raf) { g.classList.add('on'); loop(); } }, { passive: true });
+
+    // magnetic buttons
+    $$('.btn').forEach(b => {
+      b.addEventListener('pointermove', e => {
+        const r = b.getBoundingClientRect();
+        b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px,${(e.clientY - r.top - r.height / 2) * .25}px)`;
+      });
+      b.addEventListener('pointerleave', () => { b.style.transform = ''; });
+    });
+  }
+})();
