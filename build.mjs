@@ -213,7 +213,7 @@ const crumbLD = list => ({ '@type': 'BreadcrumbList', itemListElement: list.map(
 const serviceLD = (name, desc, path) => ({ '@type': 'Service', name, description: desc, serviceType: name, provider: { '@id': salonId }, areaServed: { '@type': 'City', name: B.city }, url: SITE + path });
 
 // ---------- page shell ----------
-const page = ({ path, title, desc, ogImg, ogAbs, lcp, body, schema = [] }) => `<!doctype html>
+const page = ({ path, title, desc, ogImg, ogAbs, lcp, preload = '', body, schema = [] }) => `<!doctype html>
 <html lang="ar-JO" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -235,7 +235,7 @@ ${ogAbs ? '' : '<meta property="og:image:width" content="1200"><meta property="o
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 ${lcp ? `<link rel="preload" as="image" media="(max-width:900px)" imagesrcset="${U(lcp, 640, 1024)} 640w, ${U(lcp, 1080, 1728)} 1080w" imagesizes="100vw" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width:901px)" imagesrcset="${U(lcp, 1600, 992)} 1600w, ${U(lcp, 2200, 1364)} 2200w" imagesizes="100vw" fetchpriority="high">` : ''}
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+${preload}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@700&text=${encodeURIComponent('براءة')}&display=swap">
 <link rel="stylesheet" href="/styles.css">
 ${ld(path, schema)}
@@ -257,13 +257,19 @@ const heroMedia = slides => `<div class="hero__media">${slides.map(([id, alt], i
 
 // ---------- HOME ----------
 const home = page({
-  path: '/', lcp: P.heroMakeup, ogImg: P.heroMakeup,
+  path: '/', ogImg: P.heroMakeup, ogAbs: `${SITE}/photos/hero-d.webp`,
+  preload: `<link rel="preload" as="image" media="(max-width:900px)" href="${BASE}/photos/hero-m.webp" fetchpriority="high">
+<link rel="preload" as="image" media="(min-width:901px)" imagesrcset="${BASE}/photos/hero-d-640.webp 640w, ${BASE}/photos/hero-d.webp 1320w" imagesizes="62vw" fetchpriority="high">
+`,
   title: `${B.name} | صالون تجميل وميك أب آرتست في ${B.city}`,
   desc: `${B.name} في ${B.city} (${B.area}): مكياج عرائس مع خبيرة المكياج ${B.owner}، أكثر من 1000 عروس، سهرات، سشوار وتسريحات، خدمة منزلية وVIP لعرايس عمّان. ${B.phoneLocal}`,
   schema: [faqLD(faqHome)],
   body: `
 <section class="hero" aria-labelledby="h1">
-  ${heroMedia([[P.heroMakeup, 'خبيرة مكياج في براءة بيوتي سنتر تجهّز عميلة'], [P.bride, 'عروس بفستان أبيض'], [P.blow, 'تصفيف الشعر بالسشوار في الصالون']])}
+  <div class="hero__media hero__media--feature"><picture>
+    <source media="(max-width:900px)" srcset="${BASE}/photos/hero-m.webp" width="793" height="1102">
+    <img src="/photos/hero-d.webp" srcset="${BASE}/photos/hero-d-640.webp 640w, ${BASE}/photos/hero-d.webp 1320w" sizes="62vw" width="1320" height="1102" alt="خبيرة المكياج في براءة بيوتي سنتر تضع المكياج لعروس" class="is-active" fetchpriority="high" decoding="async">
+  </picture></div>
   <div class="wrap">
     <span class="eyebrow">صالون تجميل نسائي · ${B.city}، الأردن</span>
     <h1 id="h1">${words('جمالكِ يبدأ بلمسة براءة', 3)}</h1>
@@ -271,7 +277,6 @@ const home = page({
     ${ctas()}
     <div class="hero__chips"><span class="chip">💍 +1000 عروس</span><span class="chip">VIP لعرايس عمّان</span><span class="chip">خدمة منزلية</span><span class="chip">🎓 دورات وماستر كلاس</span></div>
   </div>
-  <div class="hero__dots" role="group" aria-label="صور الخلفية"><button aria-label="الصورة 1" aria-current="true"></button><button aria-label="الصورة 2" aria-current="false"></button><button aria-label="الصورة 3" aria-current="false"></button></div>
   <span class="scroll-cue" aria-hidden="true"></span>
 </section>
 
