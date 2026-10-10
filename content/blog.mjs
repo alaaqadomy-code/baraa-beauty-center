@@ -1,6 +1,9 @@
 // Blog articles. body = HTML (h2/h3/p/ul). Links are root-relative (rebased at build).
 // Facts used here come only from the salon's own Instagram (address, phones, services, 1000+ brides, courses).
+import { postsZarqa3 } from './blog-zarqa-3.mjs';
+
 export const posts = [
+  ...postsZarqa3,
   {
     slug: 'engagement-makeup-zarqa',
     title: 'مكياج خطوبة في الزرقاء: ناعم ولا جلام؟ دليل اختيار لوك الخطبة',
