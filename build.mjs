@@ -19,7 +19,8 @@ const B = {
   fb: 'https://www.facebook.com/Baraabeautycenter/',
   ig: 'https://www.instagram.com/baraa_beauty_center/',
   snap: 'https://www.snapchat.com/@makeup.bybaraa',
-  maps: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('براءة بيوتي سنتر الزرقاء'),
+  maps: 'https://www.google.com/maps?cid=9717818474838566468', // Google Business Profile
+  geo: { lat: 32.0515639, lng: 36.0459091 },
 };
 
 // ---------- images (Unsplash CDN, auto AVIF/WebP) ----------
@@ -192,10 +193,11 @@ const salonLD = {
   '@type': 'BeautySalon', '@id': salonId,
   name: B.name, alternateName: B.nameEn, url: SITE + '/',
   image: [U(P.salon, 1200, 630), ...WORK.slice(0, 4).map(([n]) => `${SITE}/photos/${n}-${PH[n][0]}.webp`)], logo: `${SITE}/favicon.svg`,
-  telephone: B.phone, priceRange: '$$',
+  telephone: B.phone, priceRange: '$$', hasMap: B.maps,
+  geo: { '@type': 'GeoCoordinates', latitude: B.geo.lat, longitude: B.geo.lng },
   address: { '@type': 'PostalAddress', streetAddress: B.area, addressLocality: B.city, addressRegion: 'محافظة الزرقاء', addressCountry: 'JO' },
   areaServed: [{ '@type': 'City', name: B.city }, { '@type': 'City', name: 'عمّان' }],
-  sameAs: [B.fb, B.ig, B.snap],
+  sameAs: [B.fb, B.ig, B.snap, B.maps],
   founder: { '@type': 'Person', name: B.owner, alternateName: "Bara'a Ali", jobTitle: 'خبيرة مكياج', sameAs: [B.ig, B.snap] },
   contactPoint: [{ '@type': 'ContactPoint', telephone: B.phone, contactType: 'reservations', name: 'رقم السنتر' }, { '@type': 'ContactPoint', telephone: B.phoneHome, contactType: 'reservations', name: 'الخدمة المنزلية' }],
   knowsLanguage: ['ar'],
@@ -223,7 +225,7 @@ const page = ({ path, title, desc, ogImg, ogAbs, lcp, preload = '', body, schema
 <link rel="canonical" href="${SITE}${path}">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#120a0f">
-<meta name="geo.region" content="JO-AZ"><meta name="geo.placename" content="${B.city}">
+<meta name="geo.region" content="JO-AZ"><meta name="geo.placename" content="${B.city}"><meta name="geo.position" content="${B.geo.lat};${B.geo.lng}"><meta name="ICBM" content="${B.geo.lat}, ${B.geo.lng}">
 <meta property="og:type" content="website"><meta property="og:locale" content="ar_JO"><meta property="og:site_name" content="${B.name}">
 <meta property="og:title" content="${title}"><meta property="og:description" content="${desc}">
 <meta property="og:url" content="${SITE}${path}"><meta property="og:image" content="${ogAbs || U(ogImg, 1200, 630)}">
