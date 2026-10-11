@@ -103,8 +103,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
 .crumbs li+li::before{content:"‹";margin-inline-end:8px;opacity:.6}
 
 /* ========== Marquee ========== */
-.marquee-wrap{overflow:hidden;padding-block:14px;margin-block:-14px;position:relative;z-index:2}
-.marquee{background:linear-gradient(90deg,var(--gold-3),var(--gold),var(--gold-2),var(--gold));color:var(--ink);overflow:hidden;padding:18px 0;transform:rotate(-1.5deg) scale(1.03);margin-block:-10px;position:relative;z-index:2}
+.marquee-wrap{overflow:hidden;position:relative;z-index:2}
+.marquee{background:linear-gradient(90deg,var(--gold-3),var(--gold),var(--gold-2),var(--gold));color:var(--ink);overflow:hidden;padding:18px 0;margin-block:0;position:relative;z-index:2}
 .marquee__track{display:flex;width:max-content;animation:marq 38s linear infinite}
 .marquee span{font-family:var(--f-display);font-size:clamp(1.2rem,2.4vw,1.8rem);font-weight:700;padding-inline:28px;white-space:nowrap;display:flex;align-items:center;gap:28px}
 .marquee span::after{content:"✦";font-size:.8em}
