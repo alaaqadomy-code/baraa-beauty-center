@@ -404,7 +404,7 @@ const personId = `${SITE}/about-baraa/#person`;
 const salonLD = {
   '@type': 'BeautySalon', '@id': salonId,
   name: B.name, alternateName: B.nameEn, url: SITE + '/',
-  image: [U(P.salon, 1200, 630), ...WORK.slice(0, 4).map(([n]) => `${SITE}/photos/${n}-${PH[n][0]}.webp`)], logo: `${SITE}/favicon.svg`,
+  image: [{ '@type': 'ImageObject', url: U(P.salon, 1200, 630), width: 1200, height: 630 }, ...WORK.slice(0, 4).map(([n]) => ({ '@type': 'ImageObject', url: `${SITE}/photos/${n}-${PH[n][0]}.webp`, width: PH[n][0], height: PH[n][1] }))], logo: `${SITE}/favicon.svg`,
   telephone: B.phone, priceRange: '$$', hasMap: B.maps,
   geo: { '@type': 'GeoCoordinates', latitude: B.geo.lat, longitude: B.geo.lng },
   address: { '@type': 'PostalAddress', streetAddress: B.area, addressLocality: B.city, addressRegion: 'محافظة الزرقاء', addressCountry: 'JO' },
@@ -869,7 +869,8 @@ const postPage = p => {
     ogAbs: coverUrl(p.cover), ogType: 'article', ogDate: p.date, noUnsplash: !p.cover.startsWith('u:'),
     schema: [{ '@type': 'BlogPosting', '@id': `${SITE}${path}#post`, headline: p.title, description: p.summary || p.desc, inLanguage: 'ar-JO',
       datePublished: p.date, dateModified: p.updated || p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
-      image: coverUrl(p.cover), mainEntityOfPage: `${SITE}${path}`,
+      image: { '@type': 'ImageObject', url: coverUrl(p.cover), ...(PH[p.cover] ? { width: PH[p.cover][0], height: PH[p.cover][1] } : { width: 1200, height: 630 }) },
+      mainEntityOfPage: `${SITE}${path}`,
       author: { '@type': 'Person', '@id': personId, name: B.owner, jobTitle: 'خبيرة مكياج', url: `${SITE}/about-baraa/` }, publisher: { '@id': salonId } },
       faqLD(p.faq), crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [p.cat.name, `/blog/${p.cat.slug}/`], [p.title, path]])],
     body: `
