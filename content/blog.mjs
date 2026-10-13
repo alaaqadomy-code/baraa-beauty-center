@@ -3,11 +3,13 @@ import { postsZarqa4 } from './blog-zarqa-4.mjs';
 import { postsHairNails } from './blog-hair-nails.mjs';
 // Facts used here come only from the salon's own Instagram (address, phones, services, 1000+ brides, courses).
 import { postsZarqa3 } from './blog-zarqa-3.mjs';
+import { postsWave6 } from './blog-wave6.mjs';
 
 export const posts = [
   ...postsHairNails,
   ...postsZarqa4,
   ...postsZarqa3,
+  ...postsWave6,
   {
     slug: 'engagement-makeup-zarqa',
     title: 'مكياج خطوبة في الزرقاء: ناعم ولا جلام؟ دليل اختيار لوك الخطبة',

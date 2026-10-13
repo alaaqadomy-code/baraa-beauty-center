@@ -279,6 +279,7 @@ const faqHomeSvc = [
   ['هل خدمة العرايس بالبيت أو الفندق متوفرة بكل المناطق؟', 'نعم، الخدمة المنزلية والفندقية بتوصل لعمّان وإربد والسلط ومادبا وجرش وعجلون والمفرق، وبتشمل العرايس والمرافقات وكل خدمات السنتر.'],
   ['كيف بحجز الخدمة المنزلية؟', `اتصلي أو راسلينا واتساب على ${B.phoneHomeLocal}. المواعيد محدودة شهرياً.`],
   ['هل الأدوات معقّمة؟', 'نعم، نلتزم بأعلى معايير التعقيم والاحترافية ونستخدم أرقى مواد التجميل العالمية.'],
+  ['هل في رسوم مواصلات للخدمة المنزلية؟', 'رسوم المواصلات تُحدَّد مع العميلة حسب مكان السكن والمحافظة وقت الحجز.'],
 ];
 const faqCourses = [
   ['شو نوع الدورات اللي بتقدموها؟', `دورات مكياج خاصة (Private courses) وماستر كلاس مع خبيرة المكياج ${B.owner}.`],
@@ -403,7 +404,7 @@ const personId = `${SITE}/about-baraa/#person`;
 const salonLD = {
   '@type': 'BeautySalon', '@id': salonId,
   name: B.name, alternateName: B.nameEn, url: SITE + '/',
-  image: [U(P.salon, 1200, 630), ...WORK.slice(0, 4).map(([n]) => `${SITE}/photos/${n}-${PH[n][0]}.webp`)], logo: `${SITE}/favicon.svg`,
+  image: [{ '@type': 'ImageObject', url: U(P.salon, 1200, 630), width: 1200, height: 630 }, ...WORK.slice(0, 4).map(([n]) => ({ '@type': 'ImageObject', url: `${SITE}/photos/${n}-${PH[n][0]}.webp`, width: PH[n][0], height: PH[n][1] }))], logo: `${SITE}/favicon.svg`,
   telephone: B.phone, priceRange: '$$', hasMap: B.maps,
   geo: { '@type': 'GeoCoordinates', latitude: B.geo.lat, longitude: B.geo.lng },
   address: { '@type': 'PostalAddress', streetAddress: B.area, addressLocality: B.city, addressRegion: 'محافظة الزرقاء', addressCountry: 'JO' },
@@ -413,6 +414,7 @@ const salonLD = {
   contactPoint: [{ '@type': 'ContactPoint', telephone: B.phone, contactType: 'reservations', name: 'رقم السنتر' }, { '@type': 'ContactPoint', telephone: B.phoneHome, contactType: 'reservations', name: 'الخدمة المنزلية' }],
   knowsLanguage: ['ar'],
   hasOfferCatalog: { '@type': 'OfferCatalog', name: 'خدمات التجميل', itemListElement: [...services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.t, description: s.d } })), ...BEAUTY.map(x => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: x.crumb, description: x.desc, url: SITE + x.path } }))] },
+  openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '11:00', closes: '18:00' }],
 };
 const ld = (path, extra = []) => {
   const graph = [
@@ -429,7 +431,7 @@ const serviceLD = (name, desc, path) => ({ '@type': 'Service', name, description
 // Google cuts titles at ~600px; drop the brand suffix on long ones (og:site_name still carries it)
 const seoTitle = t => t.length > 60 ? t.replace(/\s*[|–]\s*(مدونة )?براءة بيوتي سنتر$/, '') : t;
 const HREFLANG = { '/': '/en/', '/en/': '/' };
-const page = ({ path, title, desc, ogImg, ogAbs, lcp, preload = '', body, schema = [], en = false }) => `<!doctype html>
+const page = ({ path, title, desc, ogImg, ogAbs, lcp, preload = '', body, schema = [], en = false, ogType = 'website', ogDate = '', noUnsplash = false }) => `<!doctype html>
 <html lang="${en ? 'en' : 'ar-JO'}" dir="${en ? 'ltr' : 'rtl'}">
 <head>
 <meta charset="utf-8">
@@ -441,14 +443,15 @@ const page = ({ path, title, desc, ogImg, ogAbs, lcp, preload = '', body, schema
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#120a0f">
 <meta name="geo.region" content="JO-AZ"><meta name="geo.placename" content="${B.city}"><meta name="geo.position" content="${B.geo.lat};${B.geo.lng}"><meta name="ICBM" content="${B.geo.lat}, ${B.geo.lng}">
-<meta property="og:type" content="website"><meta property="og:locale" content="${en ? 'en_US' : 'ar_JO'}"><meta property="og:site_name" content="${B.name}">
+<meta property="og:type" content="${ogType}"><meta property="og:locale" content="${en ? 'en_US' : 'ar_JO'}"><meta property="og:site_name" content="${B.name}">
 <meta property="og:title" content="${seoTitle(title)}"><meta property="og:description" content="${desc}">
 <meta property="og:url" content="${SITE}${path}"><meta property="og:image" content="${ogAbs || U(ogImg, 1200, 630)}">
 ${ogAbs ? '' : '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'}
+${ogType === 'article' ? `<meta property="article:published_time" content="${ogDate}"><meta property="article:author" content="${B.owner}">` : ''}
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+${!noUnsplash ? '<link rel="preconnect" href="https://images.unsplash.com" crossorigin>' : ''}
 <link rel="preload" href="/fonts/ibm-plex-sans-arabic-400-arabic.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/el-messiri-500-arabic.woff2" as="font" type="font/woff2" crossorigin>
 ${lcp ? `<link rel="preload" as="image" media="(max-width:900px)" imagesrcset="${U(lcp, 640, 1024)} 640w, ${U(lcp, 1080, 1728)} 1080w" imagesizes="100vw" fetchpriority="high">
 <link rel="preload" as="image" media="(min-width:901px)" imagesrcset="${U(lcp, 1600, 992)} 1600w, ${U(lcp, 2200, 1364)} 2200w" imagesizes="100vw" fetchpriority="high">` : ''}
@@ -863,10 +866,11 @@ const postPage = p => {
   const path = `/blog/${p.slug}/`;
   return page({
     path, ogImg: P.cosmetics, title: `${p.title} | ${B.name}`, desc: p.desc,
-    ogAbs: coverUrl(p.cover),
+    ogAbs: coverUrl(p.cover), ogType: 'article', ogDate: p.date, noUnsplash: !p.cover.startsWith('u:'),
     schema: [{ '@type': 'BlogPosting', '@id': `${SITE}${path}#post`, headline: p.title, description: p.summary || p.desc, inLanguage: 'ar-JO',
       datePublished: p.date, dateModified: p.updated || p.date, keywords: p.keywords.join('، '), articleSection: p.tag,
-      image: coverUrl(p.cover), mainEntityOfPage: `${SITE}${path}`,
+      image: { '@type': 'ImageObject', url: coverUrl(p.cover), ...(PH[p.cover] ? { width: PH[p.cover][0], height: PH[p.cover][1] } : { width: 1200, height: 630 }) },
+      mainEntityOfPage: `${SITE}${path}`,
       author: { '@type': 'Person', '@id': personId, name: B.owner, jobTitle: 'خبيرة مكياج', url: `${SITE}/about-baraa/` }, publisher: { '@id': salonId } },
       faqLD(p.faq), crumbLD([['الرئيسية', '/'], ['المدونة', '/blog/'], [p.cat.name, `/blog/${p.cat.slug}/`], [p.title, path]])],
     body: `
@@ -1003,7 +1007,7 @@ writeFileSync(`${OUT}/_headers`, `/*
 /main.js
   Cache-Control: public, max-age=31536000, immutable
 `);
-writeFileSync(`${OUT}/_redirects`, ['irbid', 'salt', 'madaba', 'aqaba'].map(c => `/home-service/${c}/ /home-service/ 301`).join('\n') + '\n');
+writeFileSync(`${OUT}/_redirects`, ['irbid', 'salt', 'madaba', 'aqaba', 'zarqa', 'amman', 'mafraq', 'jerash', 'ajloun'].map(c => `/home-service/${c}/ /home-service/ 301`).join('\n') + '\n');
 writeFileSync(`${OUT}/robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 const maxDate = list => list.map(p => p.updated || p.date).sort().pop();
 const lastmod = path => {
