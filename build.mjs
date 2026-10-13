@@ -414,7 +414,7 @@ const salonLD = {
   contactPoint: [{ '@type': 'ContactPoint', telephone: B.phone, contactType: 'reservations', name: 'رقم السنتر' }, { '@type': 'ContactPoint', telephone: B.phoneHome, contactType: 'reservations', name: 'الخدمة المنزلية' }],
   knowsLanguage: ['ar'],
   hasOfferCatalog: { '@type': 'OfferCatalog', name: 'خدمات التجميل', itemListElement: [...services.map(s => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: s.t, description: s.d } })), ...BEAUTY.map(x => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: x.crumb, description: x.desc, url: SITE + x.path } }))] },
-  openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: '11:00', closes: '18:00' }],
+  openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '11:00', closes: '18:00' }],
 };
 const ld = (path, extra = []) => {
   const graph = [
