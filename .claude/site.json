@@ -5,7 +5,7 @@
   "hosting": "cloudflare-git",
   "cfProject": "baraa-beauty-center",
   "build": "node build.mjs",
-  "repo": "idresalalaree-debug/baraa-beauty-center",
+  "repo": "alaaqadomy-code/baraabeautycenter",
   "articles": {
     "format": "unknown",
     "dir": "content",

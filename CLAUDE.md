@@ -8,12 +8,12 @@
 | البند | القيمة |
 |---|---|
 | الدومين | https://baraabeautycenter.com |
-| الريبو | https://github.com/idresalalaree-debug/baraa-beauty-center (العمل من فرع في alaaqadomy-code ثم PR) |
+| الريبو | https://github.com/alaaqadomy-code/baraabeautycenter (نُقل من idresalalaree-debug في 15 أكتوبر 2026؛ الفورك القديم alaaqadomy-code/baraa-beauty-center مفصول ومستقل) |
 | النشر | Cloudflare Pages، المشروع **baraa-beauty-center**، **مربوط بـ GitHub**: النشر يتم تلقائياً عند merge على `main` فقط |
 | المجلد المحلي الصحيح | هذا المجلد (`C:\Users\JCC\projects\baraa-beauty-center`). المجلد المكرر داخل `instagram-recovery\projects` نسخة بلا git؛ لا تعمل فيه |
 
 ## طريقة النشر الصحيحة
-1. التعديل في فرع، ثم PR إلى `main` في ريبو idresalalaree-debug.
+1. التعديل في فرع، ثم PR إلى `main` في ريبو alaaqadomy-code/baraabeautycenter.
 2. الـ merge على `main` هو النشر. **ممنوع wrangler مباشرة**، و**ممنوع** رفع ZIP يدوي لهذا المشروع.
 3. **الفحص إلزامي بعد الـ merge**: الرئيسية وصفحة خدمة وملف CSS تعطي 200 على الدومين.
 
