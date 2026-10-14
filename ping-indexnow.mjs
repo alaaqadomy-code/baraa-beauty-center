@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 
 const SITE = 'https://baraabeautycenter.com';
-const KEY = '8f3a2b5c4e1d9f7a6b0c8e2d4f1a3b5c';
+const KEY = 'adfb46330da73d4aad1c8aab1ee3fab7';
 const KEY_LOCATION = `${SITE}/${KEY}.txt`;
 
 const sitemap = readFileSync('./docs/sitemap.xml', 'utf8');
