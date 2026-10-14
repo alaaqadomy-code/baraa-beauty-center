@@ -1,0 +1,16 @@
+{
+  "cfAccount": "b951ecc9e456eca48c58d760c46a8659",
+  "name": "baraabeautycenter",
+  "domain": "baraabeautycenter.com",
+  "hosting": "cloudflare-git",
+  "cfProject": "baraa-beauty-center",
+  "build": "node build.mjs",
+  "repo": "idresalalaree-debug/baraa-beauty-center",
+  "articles": {
+    "format": "unknown",
+    "dir": "content",
+    "note": "راجع CLAUDE.md وcontent/"
+  },
+  "gscProperty": "https://baraabeautycenter.com/",
+  "expectFolder": "baraa-beauty-center"
+}
