@@ -1,0 +1,7 @@
+
+# raw review screenshots (unblurred) stay local
+content/assets-inbox/reviews/*.png
+
+# site-deploy artifacts (keep .claude/site.json tracked)
+.claude/deploy/
+.claude/last-deploy.json
