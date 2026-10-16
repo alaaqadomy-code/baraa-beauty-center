@@ -2,6 +2,9 @@
 # raw review screenshots (unblurred) stay local
 content/assets-inbox/reviews/*.png
 
+# local preview of unpublished pages (e.g. /prices/ until the owner sends prices)
+drafts/
+
 # site-deploy artifacts (keep .claude/site.json tracked)
 .claude/deploy/
 .claude/last-deploy.json
