@@ -5,6 +5,7 @@ import { postsHairNails } from './blog-hair-nails.mjs';
 import { postsZarqa3 } from './blog-zarqa-3.mjs';
 import { postsWave6 } from './blog-wave6.mjs';
 import { postsWave7 } from './blog-wave7.mjs';
+import { postsWave8 } from './blog-wave8.mjs';
 
 export const posts = [
   ...postsHairNails,
@@ -12,6 +13,7 @@ export const posts = [
   ...postsZarqa3,
   ...postsWave6,
   ...postsWave7,
+  ...postsWave8,
   {
     slug: 'engagement-makeup-zarqa',
     title: 'مكياج خطوبة في الزرقاء: ناعم ولا جلام؟ دليل اختيار لوك الخطبة',
